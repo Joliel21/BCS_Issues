@@ -1,0 +1,7 @@
+{
+  "folder": "Issue_2",
+  "issueId": "Issue_2",
+  "createdBy": "BCS",
+  "notes": "Trial Issue 2 created via BCS hosted-first pipeline.",
+  "expectedGitHubPath": "Issue_2/viewer.json"
+}

@@ -1,9 +1,0 @@
-
-{
-  "folder": "Issue_1",
-  "issueId": "bta_trial_issue_1",
-  "createdBy": "BCS",
-  "notes": "Starter Issue_1 created locally so BCS can list and publish exports_hosted issues.",
-  "expectedGitHubPath": "Issue_1/viewer.json"
-}
-

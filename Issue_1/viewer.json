@@ -1,0 +1,41 @@
+﻿{
+  "id": "bta_trial_issue_1",
+  "title": "Breathtaking Awareness – Trial Issue 1",
+  "theme": "bta-clean",
+  "subscribeUrl": "",
+  "toc": [
+    { "label": "Cover", "pageNumber": 1 },
+    { "label": "Welcome", "pageNumber": 2 },
+    { "label": "About", "pageNumber": 4 }
+  ],
+  "pages": [
+    {
+      "id": "page_1",
+      "pageNumber": 1,
+      "elements": [
+        {
+          "id": "img_cover",
+          "type": "image",
+          "style": {},
+          "linkUrl": null,
+          "content": {
+            "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/09/logo-watermark.png",
+            "alt": "Breathtaking Awareness watermark logo"
+          }
+        },
+        {
+          "id": "cover_title",
+          "type": "text",
+          "style": { "role": "heading" },
+          "linkUrl": null,
+          "content": { "text": "Breathtaking Awareness – Trial Issue 1" }
+        }
+      ],
+      "fallbackText": "Cover"
+    }
+  ],
+  "spreads": [
+    { "id": "spread_1", "pageLeftId": null, "pageRightId": "page_1", "pageLeftNumber": null, "pageRightNumber": 1 }
+  ],
+  "_debug": { "generatedAt": "2025-12-19T00:00:00.000Z" }
+}

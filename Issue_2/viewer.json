@@ -1,10 +1,13 @@
-﻿{
+{
   "id": "Issue_2",
   "title": "Breathtaking Awareness – Trial Issue 2",
   "theme": "bta-clean",
   "subscribeUrl": "",
   "toc": [
-    { "label": "Cover", "pageNumber": 1 }
+    {
+      "label": "Cover",
+      "pageNumber": 1
+    }
   ],
   "pages": [
     {
@@ -14,7 +17,13 @@
         {
           "id": "img_cover",
           "type": "image",
-          "style": {},
+          "style": {
+            "x": 0.05,
+            "y": 0.05,
+            "w": 0.9,
+            "h": 0.8,
+            "fit": "contain"
+          },
           "linkUrl": null,
           "content": {
             "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/11/PHeeling_PHabulous.png",
@@ -24,7 +33,13 @@
         {
           "id": "cover_title",
           "type": "text",
-          "style": { "role": "heading" },
+          "style": {
+            "role": "heading",
+            "x": 0.08,
+            "y": 0.88,
+            "w": 0.84,
+            "h": 0.08
+          },
           "linkUrl": null,
           "content": {
             "text": "Breathtaking Awareness – Trial Issue 2"
@@ -44,6 +59,6 @@
     }
   ],
   "_debug": {
-    "generatedAt": "2025-12-19T00:00:00.000Z"
+    "generatedAt": "2025-12-19T12:24:02Z"
   }
 }

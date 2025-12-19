@@ -1,0 +1,64 @@
+{
+  "id": "Issue_2",
+  "title": "Breathtaking Awareness – Trial Issue 2",
+  "theme": "bta-clean",
+  "subscribeUrl": "",
+  "toc": [
+    {
+      "label": "Cover",
+      "pageNumber": 1
+    }
+  ],
+  "pages": [
+    {
+      "id": "page_1",
+      "pageNumber": 1,
+      "elements": [
+        {
+          "id": "img_cover",
+          "type": "image",
+          "style": {
+            "x": 0.05,
+            "y": 0.05,
+            "w": 0.9,
+            "h": 0.8,
+            "fit": "contain"
+          },
+          "linkUrl": null,
+          "content": {
+            "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/09/Jolie-Flash-the-boobs.png",
+            "alt": "Breathtaking Awareness – Trial Issue 2 cover"
+          }
+        },
+        {
+          "id": "cover_title",
+          "type": "text",
+          "style": {
+            "role": "heading",
+            "x": 0.08,
+            "y": 0.88,
+            "w": 0.84,
+            "h": 0.08
+          },
+          "linkUrl": null,
+          "content": {
+            "text": "Breathtaking Awareness – Trial Issue 2"
+          }
+        }
+      ],
+      "fallbackText": "Cover"
+    }
+  ],
+  "spreads": [
+    {
+      "id": "spread_1",
+      "pageLeftId": null,
+      "pageRightId": "page_1",
+      "pageLeftNumber": null,
+      "pageRightNumber": 1
+    }
+  ],
+  "_debug": {
+    "generatedAt": "2025-12-19T12:24:02Z"
+  }
+}

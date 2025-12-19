@@ -1,5 +1,4 @@
-@'
-{
+﻿{
   "id": "bta_trial_issue_1",
   "title": "Breathtaking Awareness – Trial Issue 1",
   "theme": "bta-clean",
@@ -30,86 +29,13 @@
           "style": { "role": "heading" },
           "linkUrl": null,
           "content": { "text": "Breathtaking Awareness – Trial Issue 1" }
-        },
-        {
-          "id": "cover_sub",
-          "type": "text",
-          "style": { "role": "body" },
-          "linkUrl": null,
-          "content": { "text": "Hosted-first demo issue exported from BCS." }
         }
       ],
       "fallbackText": "Cover"
-    },
-    {
-      "id": "page_2",
-      "pageNumber": 2,
-      "elements": [
-        {
-          "id": "welcome_h",
-          "type": "text",
-          "style": { "role": "heading" },
-          "linkUrl": null,
-          "content": { "text": "Welcome" }
-        },
-        {
-          "id": "welcome_b",
-          "type": "text",
-          "style": { "role": "body" },
-          "linkUrl": null,
-          "content": { "text": "This is a starter Issue_1 created so BCS can list, preview, and publish from inside the app (no PowerShell needed long-term)." }
-        }
-      ],
-      "fallbackText": "Welcome"
-    },
-    {
-      "id": "page_3",
-      "pageNumber": 3,
-      "elements": [
-        {
-          "id": "toc_h",
-          "type": "text",
-          "style": { "role": "heading" },
-          "linkUrl": null,
-          "content": { "text": "In This Issue" }
-        },
-        {
-          "id": "toc_b",
-          "type": "text",
-          "style": { "role": "body" },
-          "linkUrl": null,
-          "content": { "text": "Cover\nWelcome\nAbout" }
-        }
-      ],
-      "fallbackText": "TOC"
-    },
-    {
-      "id": "page_4",
-      "pageNumber": 4,
-      "elements": [
-        {
-          "id": "about_h",
-          "type": "text",
-          "style": { "role": "heading" },
-          "linkUrl": null,
-          "content": { "text": "About" }
-        },
-        {
-          "id": "about_b",
-          "type": "text",
-          "style": { "role": "body" },
-          "linkUrl": null,
-          "content": { "text": "Next: use BCS to Export + Publish Issue_1 to GitHub, then paste the shortcode into WordPress.com." }
-        }
-      ],
-      "fallbackText": "About"
     }
   ],
   "spreads": [
-    { "id": "spread_1", "pageLeftId": null, "pageRightId": "page_1", "pageLeftNumber": null, "pageRightNumber": 1 },
-    { "id": "spread_2", "pageLeftId": "page_2", "pageRightId": "page_3", "pageLeftNumber": 2, "pageRightNumber": 3 },
-    { "id": "spread_3", "pageLeftId": null, "pageRightId": "page_4", "pageLeftNumber": null, "pageRightNumber": 4 }
+    { "id": "spread_1", "pageLeftId": null, "pageRightId": "page_1", "pageLeftNumber": null, "pageRightNumber": 1 }
   ],
   "_debug": { "generatedAt": "2025-12-19T00:00:00.000Z" }
 }
-'@ | Set-Content -Path ".\exports_hosted\Issue_1\viewer.json" -Encoding UTF8

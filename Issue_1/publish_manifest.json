@@ -1,7 +1,22 @@
 {
-  "folder": "Issue_1",
-  "issueId": "bta_trial_issue_1",
-  "createdBy": "BCS",
-  "notes": "Starter Issue_1 created locally so BCS can list and publish exports_hosted issues.",
-  "expectedGitHubPath": "Issue_1/viewer.json"
+  "issueId": "Issue_1",
+  "title": "Winter 2026",
+  "cover": {
+    "image": "cover.png",
+    "text": "Winter 2026"
+  },
+  "background": {
+    "image": ""
+  },
+  "theme": {
+    "pack": "default"
+  },
+  "sound": {
+    "enabled": true,
+    "default": "calm"
+  },
+  "intro": {
+    "preset": "none"
+  },
+  "lockBehaviorVersion": true
 }

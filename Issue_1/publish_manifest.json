@@ -2,7 +2,7 @@
   "issueId": "Issue_1",
   "title": "Winter 2026",
   "cover": {
-    "image": "cover.png",
+    "image": "https://raw.githubusercontent.com/Joliel21/BCS_Issues/main/Issue_1/cover.png",
     "text": "Winter 2026"
   },
   "background": {

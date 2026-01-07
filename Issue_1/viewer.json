@@ -15,9 +15,19 @@
       "pageNumber": 1,
       "elements": [
         {
-          "id": "img_cover",
+          "id": "img_cover_bg",
           "type": "image",
-          "style": {},
+          "style": { "x": 0, "y": 0, "w": 1, "h": 1, "opacity": 1 },
+          "linkUrl": null,
+          "content": {
+            "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/12/magazine-cover.png",
+            "alt": "Magazine cover background"
+          }
+        },
+        {
+          "id": "img_cover_watermark",
+          "type": "image",
+          "style": { "x": 0.30, "y": 0.34, "w": 0.40, "h": 0.40, "opacity": 0.18 },
           "linkUrl": null,
           "content": {
             "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/09/logo-watermark.png",
@@ -27,7 +37,18 @@
         {
           "id": "cover_title",
           "type": "text",
-          "style": { "role": "heading" },
+          "style": {
+            "role": "heading",
+            "x": 0.08,
+            "y": 0.78,
+            "w": 0.84,
+            "h": 0.16,
+            "fontSize": "34px",
+            "fontWeight": "800",
+            "lineHeight": "1.15",
+            "textAlign": "center",
+            "color": "#ffffff"
+          },
           "linkUrl": null,
           "content": { "text": "Breathtaking Awareness – Trial Issue 1" }
         }
@@ -63,10 +84,10 @@
             "y": 0.38,
             "w": 0.84,
             "h": 0.10,
-            "fontSize": 38,
-            "fontWeight": 750,
-            "lineHeight": 1.1,
-            "align": "left"
+            "fontSize": "38px",
+            "fontWeight": "750",
+            "lineHeight": "1.1",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": { "text": "Redefining Success for Individuals Living With Chronic Illness" }
@@ -80,10 +101,10 @@
             "y": 0.49,
             "w": 0.84,
             "h": 0.06,
-            "fontSize": 16,
+            "fontSize": "16px",
             "opacity": 0.8,
-            "lineHeight": 1.35,
-            "align": "left"
+            "lineHeight": "1.35",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": {
@@ -99,9 +120,9 @@
             "y": 0.57,
             "w": 0.84,
             "h": 0.35,
-            "fontSize": 18,
-            "lineHeight": 1.55,
-            "align": "left"
+            "fontSize": "18px",
+            "lineHeight": "1.55",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": {
@@ -141,10 +162,10 @@
             "y": 0.08,
             "w": 0.70,
             "h": 0.16,
-            "fontSize": 22,
-            "fontWeight": 650,
-            "lineHeight": 1.35,
-            "align": "left",
+            "fontSize": "22px",
+            "fontWeight": "650",
+            "lineHeight": "1.35",
+            "textAlign": "left",
             "opacity": 0.95
           },
           "linkUrl": null,
@@ -161,9 +182,9 @@
             "y": 0.27,
             "w": 0.84,
             "h": 0.64,
-            "fontSize": 18,
-            "lineHeight": 1.55,
-            "align": "left"
+            "fontSize": "18px",
+            "lineHeight": "1.55",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": {
@@ -187,10 +208,10 @@
             "y": 0.08,
             "w": 0.84,
             "h": 0.08,
-            "fontSize": 36,
-            "fontWeight": 750,
-            "lineHeight": 1.1,
-            "align": "left"
+            "fontSize": "36px",
+            "fontWeight": "750",
+            "lineHeight": "1.1",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": { "text": "Introduction Speech" }
@@ -198,12 +219,7 @@
         {
           "id": "shield_fist_icon",
           "type": "image",
-          "style": {
-            "x": 0.08,
-            "y": 0.19,
-            "w": 0.10,
-            "h": 0.10
-          },
+          "style": { "x": 0.08, "y": 0.19, "w": 0.10, "h": 0.10 },
           "linkUrl": null,
           "content": {
             "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Fist_.svg",
@@ -213,12 +229,7 @@
         {
           "id": "shield_logo_icon",
           "type": "image",
-          "style": {
-            "x": 0.20,
-            "y": 0.19,
-            "w": 0.10,
-            "h": 0.10
-          },
+          "style": { "x": 0.20, "y": 0.19, "w": 0.10, "h": 0.10 },
           "linkUrl": "https://breathtakingawareness.com",
           "content": {
             "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/09/logo-watermark.png",
@@ -228,12 +239,7 @@
         {
           "id": "shield_megaphone_icon",
           "type": "image",
-          "style": {
-            "x": 0.32,
-            "y": 0.19,
-            "w": 0.12,
-            "h": 0.10
-          },
+          "style": { "x": 0.32, "y": 0.19, "w": 0.12, "h": 0.10 },
           "linkUrl": null,
           "content": {
             "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Megaphone%20Icon.svg",
@@ -243,12 +249,7 @@
         {
           "id": "shield_ribbon_icon",
           "type": "image",
-          "style": {
-            "x": 0.45,
-            "y": 0.19,
-            "w": 0.06,
-            "h": 0.10
-          },
+          "style": { "x": 0.45, "y": 0.19, "w": 0.06, "h": 0.10 },
           "linkUrl": null,
           "content": {
             "imageUrl": "https://commons.wikimedia.org/wiki/Special:FilePath/Periwinkle%20ribbon.svg",
@@ -264,9 +265,9 @@
             "y": 0.32,
             "w": 0.84,
             "h": 0.60,
-            "fontSize": 18,
-            "lineHeight": 1.55,
-            "align": "left"
+            "fontSize": "18px",
+            "lineHeight": "1.55",
+            "textAlign": "left"
           },
           "linkUrl": null,
           "content": {

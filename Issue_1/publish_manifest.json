@@ -1,6 +1,8 @@
 {
-  "issueId": "Issue_1",
-  "title": "Winter 2026",
+  "issue": {
+    "id": "Issue_1",
+    "title": "Winter 2026"
+  },
   "cover": {
     "image": "https://raw.githubusercontent.com/Joliel21/BCS_Issues/main/Issue_1/cover.png",
     "text": "Winter 2026"
@@ -13,7 +15,16 @@
   },
   "sound": {
     "enabled": true,
-    "default": "calm"
+    "show_button": true,
+    "remember_choice_across_visits": true,
+    "default_profile": "calm",
+    "default_volume": 0.35,
+    "profiles": [
+      { "id": "calm", "label": "Calm", "url": "", "loop": true, "vol": 1, "enabled": true },
+      { "id": "classical", "label": "Classical", "url": "", "loop": true, "vol": 1, "enabled": true },
+      { "id": "jazz", "label": "Jazz", "url": "", "loop": true, "vol": 1, "enabled": true },
+      { "id": "instrumental", "label": "Instrumental", "url": "", "loop": true, "vol": 1, "enabled": true }
+    ]
   },
   "intro": {
     "preset": "none"

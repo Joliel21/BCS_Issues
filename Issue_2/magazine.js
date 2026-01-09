@@ -397,41 +397,78 @@
     if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
 
     // click handlers
-    ui.btnPrev.addEventListener("click", (e) => { e.preventDefault(); state.goPrev(); });
-    ui.btnNext.addEventListener("click", (e) => { e.preventDefault(); state.goNext(); });
-    ui.btnClose.addEventListener("click", (e) => { e.preventDefault(); state.goCover("front"); });
+   // close handler (keep this as click; no repeat needed)
+ui.btnClose.addEventListener("click", (e) => { e.preventDefault(); state.goCover("front"); });
 
-    // hold-to-repeat (accelerating)
-    const makeRepeater = (fn) => {
-      let t0 = 0;
-      let timer = 0;
-      let delay = 260;
-      const stop = () => { if (timer) { clearTimeout(timer); timer = 0; } };
-      const tick = () => {
-        fn();
-        const elapsed = Date.now() - t0;
-        delay = Math.max(60, 260 - Math.floor(elapsed / 350) * 35);
-        timer = window.setTimeout(tick, delay);
-      };
-      const start = () => { stop(); t0 = Date.now(); delay = 260; tick(); };
-      return { start, stop };
-    };
-    const repPrev = makeRepeater(() => state.goPrev());
-    const repNext = makeRepeater(() => state.goNext());
+// prev/next: tap = 1 step, hold = repeat after delay (no runaway sensitivity)
+const HOLD_DELAY = 650;     // ms before repeating starts
+const REPEAT_START = 170;   // initial repeat speed (ms)
+const REPEAT_MIN = 70;      // fastest repeat (ms)
+const ACCEL_EVERY = 420;    // ms between speed-ups
+const ACCEL_STEP = 18;      // ms faster each accel tick
 
-    const bindRepeat = (btn, rep) => {
-      btn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-        rep.start();
-      });
-      const stop = () => rep.stop();
-      btn.addEventListener("pointerup", stop);
-      btn.addEventListener("pointercancel", stop);
-      btn.addEventListener("pointerleave", stop);
-    };
-    bindRepeat(ui.btnPrev, repPrev);
-    bindRepeat(ui.btnNext, repNext);
+function bindHoldToRepeat(btn, stepFn) {
+  let holdTimer = 0;
+  let repeatTimer = 0;
+  let accelTimer = 0;
+  let isHeld = false;
+  let rate = REPEAT_START;
+
+  const clearAll = () => {
+    if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
+    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = 0; }
+    if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
+  };
+
+  const startRepeat = () => {
+    isHeld = true;
+    rate = REPEAT_START;
+
+    // first repeat tick happens immediately on hold-start
+    stepFn();
+
+    repeatTimer = setInterval(stepFn, rate);
+
+    // accelerate while holding
+    accelTimer = setInterval(() => {
+      rate = Math.max(REPEAT_MIN, rate - ACCEL_STEP);
+      if (repeatTimer) {
+        clearInterval(repeatTimer);
+        repeatTimer = setInterval(stepFn, rate);
+      }
+    }, ACCEL_EVERY);
+  };
+
+  btn.addEventListener("pointerdown", (e) => {
+    e.preventDefault();
+    isHeld = false;
+    clearAll();
+
+    try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+
+    holdTimer = setTimeout(startRepeat, HOLD_DELAY);
+  });
+
+  btn.addEventListener("pointerup", (e) => {
+    e.preventDefault();
+
+    // if released before hold delay: single step
+    const doSingle = !isHeld;
+
+    clearAll();
+
+    if (doSingle) stepFn();
+  });
+
+  btn.addEventListener("pointercancel", (e) => { e.preventDefault(); clearAll(); });
+  btn.addEventListener("pointerleave", (e) => { e.preventDefault(); clearAll(); });
+}
+
+// IMPORTANT: remove click handlers for prev/next.
+// Pointer-up handles single-step; hold handles repeat.
+bindHoldToRepeat(ui.btnPrev, () => state.goPrev());
+bindHoldToRepeat(ui.btnNext, () => state.goNext());
+
 
     // knob menu
     if (ui.knobBtn && ui.knobMenu) {

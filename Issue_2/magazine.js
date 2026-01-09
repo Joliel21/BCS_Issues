@@ -454,7 +454,10 @@ function bindHoldToRepeat(btn, stepFn) {
   btn.addEventListener("pointerleave", (e) => { e.preventDefault(); clearAll(); });
 }
 
+bindHoldToRepeat(ui.btnPrev, () => state.goPrev());
+bindHoldToRepeat(ui.btnNext, () => state.goNext());
 
+     
     // knob menu
     if (ui.knobBtn && ui.knobMenu) {
       let knobOpen = false;

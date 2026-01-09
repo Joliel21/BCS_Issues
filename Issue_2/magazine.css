@@ -801,14 +801,6 @@ body.admin-bar .mag-plug-stage {
   transform-style: flat !important;
 }
 
-/* OPTIONAL: if you still want ONLY knob rotation (Z axis), use this instead of transform:none above:
-.mag-plug-object {
-  transform: rotateZ(var(--mag-tilt-z)) !important;
-  transition: transform 120ms ease !important;
-  will-change: transform !important;
-  transform-style: flat !important;
-}
-*/
 
 /* 4) Stage: remove perspective so nothing “floats” with camera depth */
 .mag-plug-stage {

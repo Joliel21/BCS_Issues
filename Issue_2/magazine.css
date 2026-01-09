@@ -1,13 +1,9 @@
 /* =====================================================================
-   MAG PLUG — REALISM BUILD v3 (Updated Drop-in)
-   Changes in this version:
-   - Removed debug outline
-   - Unified --mag-open-max (single source of truth)
-   - Removed admin-bar height overrides to preserve full-screen stage
-   - Locked background (no movement)
-   - Hid top-left live label (kept for accessibility)
-   - Slight size bump while preserving A4 ratios
-   - Ensured open state centers the magazine
+   MAG PLUG — REALISM BUILD v3
+   Search tags:
+   [VARS] [THEME-HARDEN] [STAGE] [BG-PARALLAX] [COVER-REALISM] [OPEN-SIZING]
+   [SPREAD-REALISM] [STACK-ILLUSION] [PAGES-PAPER] [PAGE-CURL]
+   [ELEMENTS] [CONTROLS] [SOUND] [RESPONSIVE]
    ===================================================================== */
 
 /* =========================
@@ -19,19 +15,16 @@
     --mag-plug-shadow: 0 18px 60px rgba(0,0,0,0.08);
     --mag-plug-gutter-w: 8px;
     --mag-plug-edge: rgba(0,0,0,0.08);
-
     /* Page padding is OFF by default (full-bleed). */
     --mag-page-pad-top: 0px;
     --mag-page-pad-bottom: 0px;
     --mag-page-pad-inner: 0px;
     --mag-page-pad-outer: 0px;
-
-    /* OPEN BOOK WIDTH CONTROL (Unified) */
-    --mag-open-max: min(90vw, 1320px);
-
+    /* OPEN BOOK WIDTH CONTROL */
+    --mag-open-max: min(85vw, 1200px);
     /* =========================
-       [STACK-ILLUSION]
-       ========================= */
+     [STACK-ILLUSION]
+     ========================= */
     --mag-stack-left: 10;
     --mag-stack-right: 10;
     --mag-stack-step: 0.9px;
@@ -39,30 +32,27 @@
     --mag-stack-color: rgba(245,245,245,1);
     --mag-stack-edge: rgba(0,0,0,0.10);
     --mag-stack-shadow: 0 12px 34px rgba(0,0,0,0.20);
-
     /* =========================
-       [PAGES-PAPER]
-       ========================= */
+     [PAGES-PAPER]
+     ========================= */
     --mag-paper-grain: 0.05;
     --mag-curl-strength: 0.24;
     --mag-spread-lift: 0 30px 90px rgba(0,0,0,0.28);
     --mag-edge-bevel: 0 0 0 1px rgba(0,0,0,0.06) inset;
-
     /* =========================
-       [PARALLAX] 3D tilt vars (driven by JS)
-       ========================= */
+     [PARALLAX] 3D tilt vars (driven by JS)
+     ========================= */
     --mag-tilt-x: 0deg;
     --mag-tilt-y: 0deg;
     --mag-tilt-z: 0deg;
     --mag-parallax-z: 0px;
     --mag-parallax-scale: 1;
-
     /* =========================
-       [BG] background vars (kept for compatibility; movement is locked)
-       ========================= */
+     [BG-PARALLAX] true depth background vars (driven by JS)
+     ========================= */
     --mag-bg-x: 0px;
     --mag-bg-y: 0px;
-    --mag-bg-scale: 1.02;
+    --mag-bg-scale: 1.02; /* background slightly larger to hide edges when moving */
 }
 
 /* =====================================================================
@@ -109,7 +99,6 @@
 .mag-plug-stage {
     position: relative;
     width: 100%;
-    min-height: 100vh;
     height: 100vh;
     overflow: hidden;
     background: transparent;
@@ -118,21 +107,40 @@
     justify-content: center;
     margin: 0;
     padding: 0;
-    perspective: 1400px;
-    perspective-origin: 50% 50%;
+    perspective: 1200px;
+    perspective-origin: 50% 45%;
+}
+
+/* Logged-in (WP admin bar present) */
+body.admin-bar .mag-plug-stage {
+    height: clamp(750px, calc(72vh + 32px), 1050px);
+}
+
+@media (max-width:782px) {
+    body.admin-bar .mag-plug-stage {
+        height: clamp(700px, calc(72vh + 46px), 980px);
+    }
+}
+
+@media (max-width:480px) {
+    body.admin-bar .mag-plug-stage {
+        height: clamp(600px, calc(72vh + 46px), 900px);
+    }
 }
 
 /* =====================================================================
-   [BG] BACKGROUND LAYER (locked; covers full stage)
+   [BG-PARALLAX] BACKGROUND LAYER (true depth)
    ===================================================================== */
 .mag-plug-background {
     position: absolute;
-    inset: 0; /* full coverage */
+    inset: -18px; /* extra bleed to hide edges on movement */
     background-size: cover;
     background-repeat: no-repeat;
-    background-position: 50% 50% !important; /* lock position */
-    transform: none !important;
-    will-change: auto;
+    /* true parallax offset */
+    background-position: calc(50% + var(--mag-bg-x)) calc(50% + var(--mag-bg-y));
+    /* slight scale to keep “depth” */
+    transform: scale(var(--mag-bg-scale));
+    will-change: background-position, transform;
     filter: saturate(1.02);
     z-index: 0;
 }
@@ -187,12 +195,11 @@
     position: relative;
     overflow: hidden;
     height: auto;
-    max-height: 82vh; /* slightly taller */
-    aspect-ratio: 210 / 297; /* A4 */
-    max-width: min(92vw, 940px); /* slight bump */
+    max-height: 78vh;
+    aspect-ratio: 210 / 297;
+    max-width: min(92vw, 900px);
     border-radius: 0;
     box-shadow: 0 26px 82px rgba(0,0,0,0.30);
-    transform-style: preserve-3d; /* for cover flip */
 }
 
 .mag-plug-cover-inner::before {
@@ -210,7 +217,6 @@
     width: 100%;
     height: 100%;
     object-fit: cover;
-    backface-visibility: hidden;
 }
 
 .mag-plug-cover-text {
@@ -231,8 +237,6 @@
    ===================================================================== */
 .mag-plug-wrapper.is-open .mag-plug-object {
     padding: 0;
-    align-items: center;
-    justify-content: center;
 }
 
 .mag-plug-spread,
@@ -240,8 +244,8 @@
     width: 100%;
     max-width: var(--mag-open-max);
     height: auto;
-    max-height: 82vh; /* slightly taller */
-    aspect-ratio: 420 / 297; /* two A4 pages side by side */
+    max-height: 78vh;
+    aspect-ratio: 420 / 297;
     border-radius: 0 !important;
     box-shadow: none !important;
 }
@@ -276,16 +280,7 @@
     opacity: 0.98;
     border: 1px solid var(--mag-stack-edge);
     box-shadow: var(--mag-stack-shadow);
-    background:
-        linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(0,0,0,0.06)),
-        repeating-linear-gradient(
-            to bottom,
-            rgba(0,0,0,0.06) 0px,
-            rgba(0,0,0,0.06) 1px,
-            rgba(255,255,255,0.00) 2px,
-            rgba(255,255,255,0.00) 4px
-        ),
-        var(--mag-stack-color);
+    background: linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(0,0,0,0.06)), repeating-linear-gradient( to bottom, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, rgba(255,255,255,0.00) 2px, rgba(255,255,255,0.00) 4px ), var(--mag-stack-color);
 }
 
 .mag-plug-spread::before {
@@ -310,14 +305,7 @@
     position: relative;
     z-index: 6;
     box-shadow: var(--mag-plug-gutter-shadow);
-    background: linear-gradient(
-        to right,
-        rgba(0,0,0,0.35) 0%,
-        rgba(0,0,0,0.55) 42%,
-        rgba(0,0,0,0.85) 50%,
-        rgba(0,0,0,0.55) 58%,
-        rgba(0,0,0,0.35) 100%
-    );
+    background: linear-gradient( to right, rgba(0,0,0,0.35) 0%, rgba(0,0,0,0.55) 42%, rgba(0,0,0,0.85) 50%, rgba(0,0,0,0.55) 58%, rgba(0,0,0,0.35) 100% );
 }
 
 .mag-plug-gutter::after {
@@ -351,16 +339,7 @@
 
 .mag-plug-page,
 .mag-plug-page.single {
-    background:
-        radial-gradient(900px 700px at 30% 20%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 55%),
-        radial-gradient(900px 700px at 75% 25%, rgba(0,0,0,0.045) 0%, rgba(0,0,0,0.0) 60%),
-        repeating-linear-gradient(
-            135deg,
-            rgba(0,0,0,var(--mag-paper-grain)) 0px,
-            rgba(0,0,0,0.0) 2px,
-            rgba(255,255,255,0.0) 6px
-        ),
-        linear-gradient(to bottom, rgba(255,255,255,1), rgba(250,250,250,1));
+    background: radial-gradient(900px 700px at 30% 20%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 55%), radial-gradient(900px 700px at 75% 25%, rgba(0,0,0,0.045) 0%, rgba(0,0,0,0.0) 60%), repeating-linear-gradient( 135deg, rgba(0,0,0,var(--mag-paper-grain)) 0px, rgba(0,0,0,0.0) 2px, rgba(255,255,255,0.0) 6px ), linear-gradient(to bottom, rgba(255,255,255,1), rgba(250,250,250,1));
     box-shadow: var(--mag-edge-bevel);
 }
 
@@ -479,16 +458,14 @@
    [CONTROLS]
    ===================================================================== */
 .mag-plug-live {
-    /* visually hidden but still accessible (do not remove) */
-    position: absolute !important;
-    width: 1px !important;
-    height: 1px !important;
-    padding: 0 !important;
-    margin: -1px !important;
-    overflow: hidden !important;
-    clip: rect(0,0,0,0) !important;
-    white-space: nowrap !important;
-    border: 0 !important;
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    z-index: 10;
+    font-size: 13px;
+    background: rgba(0,0,0,0.55);
+    color: #fff;
+    padding: 6px 10px;
 }
 
 .mag-plug-controls {
@@ -623,6 +600,7 @@
     }
 }
 
+
 /* =====================================================================
    [KNOB] single radio-knob control
    ===================================================================== */
@@ -648,10 +626,9 @@
     position:absolute;
     inset:6px;
     border-radius:999px;
-    background:
-        radial-gradient(circle at 30% 25%, rgba(255,255,255,0.28), rgba(255,255,255,0.00) 55%),
-        radial-gradient(circle at 70% 80%, rgba(0,0,0,0.35), rgba(0,0,0,0.00) 60%),
-        rgba(255,255,255,0.06);
+    background: radial-gradient(circle at 30% 25%, rgba(255,255,255,0.28), rgba(255,255,255,0.00) 55%),
+                radial-gradient(circle at 70% 80%, rgba(0,0,0,0.35), rgba(0,0,0,0.00) 60%),
+                rgba(255,255,255,0.06);
 }
 .mag-plug-knob-ind{
     position:absolute;
@@ -717,9 +694,16 @@
 }
 .mag-plug-pageinput.is-open{ display:block; }
 
+
 /* =====================================================================
    [COVER] 2-sided cover (front/back)
    ===================================================================== */
+.mag-plug-cover-inner{
+    transform-style: preserve-3d;
+}
+.mag-plug-cover-img{
+    backface-visibility: hidden;
+}
 .mag-plug-cover-back{
     position:absolute;
     inset:0;
@@ -728,6 +712,7 @@
 .mag-plug-cover-inner[data-side="back"]{
     transform: rotateY(180deg);
 }
+
 
 /* =====================================================================
    [SPREAD BACK] show cover instead of page backs when rotating
@@ -748,4 +733,36 @@
     background-repeat: no-repeat;
     z-index: 1;
     pointer-events:none;
+}
+
+
+/* ====== PATCH v2: lock background + hide top-left label + slight size bump ====== */
+.mag-plug-background{
+  background-position: 50% 50% !important;
+}
+
+.mag-plug-live{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border:0 !important;
+}
+
+:root{
+  --mag-open-max: min(88vw, 1280px);
+}
+
+.mag-plug-cover-inner{
+  max-height: 82vh;
+  max-width: min(94vw, 980px);
+}
+
+.mag-plug-spread,
+.mag-plug-page.single{
+  max-height: 82vh;
 }

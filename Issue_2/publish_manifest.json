@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "format": "bcs-magazine",
+
+  "issue": {
+    "id": "Issue_1",
+    "title": "Winter 2026"
+  },
+
+  "cover": {
+    "image": "cover.png",
+    "text": "Winter 2026"
+  },
+
+  "background": {
+    "image": ""
+  },
+
+  "theme": {
+    "colors": {
+      "stageBackground": "#ffffff",
+      "pageBackground": "#ffffff",
+      "pageText": "#111111"
+    }
+  }
+}

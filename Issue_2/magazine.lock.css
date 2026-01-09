@@ -1,0 +1,35 @@
+/* =========================================================
+   MAG PLUG — MOTION LOCK (FINAL)
+   Purpose: prevent fly/tilt/parallax while allowing Z-rotation
+   ========================================================= */
+
+.mag-plug,
+.mag-plug-wrapper,
+.mag-plug-stage,
+.mag-plug-object {
+  --mag-tilt-x: 0deg !important;
+  --mag-tilt-y: 0deg !important;
+  --mag-parallax-z: 0px !important;
+  --mag-parallax-scale: 1 !important;
+
+  --mag-bg-x: 0px !important;
+  --mag-bg-y: 0px !important;
+  --mag-bg-scale: 1 !important;
+}
+
+.mag-plug-stage {
+  perspective: none !important;
+}
+
+.mag-plug-background {
+  background-position: 50% 50% !important;
+  transform: none !important;
+  will-change: auto !important;
+}
+
+.mag-plug-object {
+  transform: rotateZ(var(--mag-tilt-z)) !important;
+  transition: transform 120ms ease !important;
+  will-change: transform !important;
+  transform-style: flat !important;
+}

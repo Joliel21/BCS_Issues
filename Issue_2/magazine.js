@@ -394,16 +394,27 @@
     // Defensive: never crash on missing nodes
     if (!ui || !state || !transform) return;
     if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
+     // HARD RESET prev/next buttons to remove any existing listeners from other scripts/plugins
+{
+  const prevClone = ui.btnPrev.cloneNode(true);
+  ui.btnPrev.replaceWith(prevClone);
+  ui.btnPrev = prevClone;
+
+  const nextClone = ui.btnNext.cloneNode(true);
+  ui.btnNext.replaceWith(nextClone);
+  ui.btnNext = nextClone;
+}
+
 
     // click handlers
    // close handler (keep this as click; no repeat needed)
 
 // prev/next: tap = 1 step, hold = repeat AFTER delay, then slowly accelerates
-const HOLD_DELAY = 900;     // wait longer before repeat starts
-const REPEAT_START = 420;   // slower starting repeat (ms)
-const REPEAT_MIN = 220;     // never faster than this (ms)
-const ACCEL_EVERY = 900;    // speed up less often (ms)
-const ACCEL_STEP = 25;      // each speed-up amount (ms)
+const HOLD_DELAY = 900;     // ms before repeating starts
+const REPEAT_START = 420;   // initial repeat (ms)
+const REPEAT_MIN = 220;     // fastest repeat (ms)
+const ACCEL_EVERY = 900;    // ms between speed-ups
+const ACCEL_STEP = 25;      // ms faster each accel tick
 
 function bindHoldToRepeat(btn, stepFn) {
   let holdTimer = 0;
@@ -418,12 +429,17 @@ function bindHoldToRepeat(btn, stepFn) {
     if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
   };
 
+  // IMPORTANT: swallow click so no other handler runs
+  btn.addEventListener("click", (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, true);
+
   const startRepeat = () => {
     isHeld = true;
     rate = REPEAT_START;
 
-    // IMPORTANT: do NOT step immediately here.
-    // The first step happens after `rate` ms, which feels much less sensitive.
+    // do NOT step immediately; first repeat happens after `rate` ms
     repeatTimer = setInterval(stepFn, rate);
 
     accelTimer = setInterval(() => {
@@ -437,6 +453,7 @@ function bindHoldToRepeat(btn, stepFn) {
 
   btn.addEventListener("pointerdown", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     isHeld = false;
     clearAll();
     try { btn.setPointerCapture(e.pointerId); } catch (_) {}
@@ -445,13 +462,14 @@ function bindHoldToRepeat(btn, stepFn) {
 
   btn.addEventListener("pointerup", (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const doSingle = !isHeld;
     clearAll();
     if (doSingle) stepFn();
   });
 
-  btn.addEventListener("pointercancel", (e) => { e.preventDefault(); clearAll(); });
-  btn.addEventListener("pointerleave", (e) => { e.preventDefault(); clearAll(); });
+  btn.addEventListener("pointercancel", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); });
+  btn.addEventListener("pointerleave", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); });
 }
 
 bindHoldToRepeat(ui.btnPrev, () => state.goPrev());

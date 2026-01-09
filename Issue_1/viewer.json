@@ -1,204 +1,29 @@
 {
+  "schemaVersion": "1.0",
+  "format": "bcs-magazine",
   "id": "bta_trial_issue_1",
   "title": "Breathtaking Awareness - Trial Issue 1",
-  "theme": "bta-clean",
-  "subscribeUrl": "",
   "pageCountHint": 48,
   "toc": [
-    { "label": "Redefining Success", "pageNumber": 1 },
-    { "label": "Redefining Success (cont.)", "pageNumber": 2 },
-    { "label": "Introduction Speech", "pageNumber": 3 }
+    {
+      "label": "Redefining Success",
+      "pageNumber": 1
+    },
+    {
+      "label": "Redefining Success (cont.)",
+      "pageNumber": 2
+    },
+    {
+      "label": "Introduction Speech",
+      "pageNumber": 3
+    }
   ],
   "pages": [
     {
       "id": "page_blank_front",
       "pageNumber": null,
       "isNumbered": false,
-      "elements": [],
-      "fallbackText": ""
-    },
-    {
-      "id": "page_1",
-      "pageNumber": 1,
-      "isNumbered": true,
-      "elements": [
-        {
-          "id": "art_title",
-          "type": "text",
-          "style": {
-            "role": "heading",
-            "x": 0.08,
-            "y": 0.1,
-            "w": 0.84,
-            "h": 0.16,
-            "fontSize": "38px",
-            "fontWeight": "750",
-            "lineHeight": "1.1",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Redefining Success for Individuals Living With Chronic Illness"
-          }
-        },
-        {
-          "id": "art_deck",
-          "type": "text",
-          "style": {
-            "role": "text",
-            "x": 0.08,
-            "y": 0.28,
-            "w": 0.84,
-            "h": 0.08,
-            "fontSize": "16px",
-            "opacity": 0.8,
-            "lineHeight": "1.35",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Success is not a universal checklist. It is a personal journey shaped by real bodies and real seasons of life."
-          }
-        },
-        {
-          "id": "art_body_p1",
-          "type": "text",
-          "style": {
-            "role": "article",
-            "x": 0.08,
-            "y": 0.38,
-            "w": 0.84,
-            "h": 0.54,
-            "fontSize": "18px",
-            "lineHeight": "1.55",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Imagine waking up each morning unsure how your body will feel-whether you will have the energy to make breakfast, keep your plans, or simply get through the day without symptoms taking over. For millions of people, that uncertainty is daily life.\n\nChronic illness is not rare. The CDC estimates that tens of millions of Americans live with one, and most of us will encounter chronic illness personally or through someone we love. Yet our culture still defines success in a narrow way: productivity, constant achievement, and perfection. If you cannot keep pace, you are told-directly or indirectly-that you are falling behind.\n\nFor people with chronic illness, that message does not just sting; it harms. More than half of those living with chronic conditions also struggle with depression or anxiety. Social pressure and the stress of trying to meet normal expectations add real emotional weight to an already heavy physical load.\n\nI know this firsthand. Living with multiple rare conditions and heart failure changed everything. I did not leave my career as a sonographer because I lacked drive. I left because my body could no longer guarantee the consistency that job required."
-          }
-        }
-      ],
-      "fallbackText": "Redefining Success"
-    },
-    {
-      "id": "page_2",
-      "pageNumber": 2,
-      "isNumbered": true,
-      "elements": [
-        {
-          "id": "pull_quote",
-          "type": "text",
-          "style": {
-            "role": "text",
-            "x": 0.08,
-            "y": 0.08,
-            "w": 0.84,
-            "h": 0.16,
-            "fontSize": "22px",
-            "fontWeight": "650",
-            "lineHeight": "1.35",
-            "textAlign": "left",
-            "opacity": 0.95
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Redefining success gives people permission to honor their reality instead of constantly fighting against it."
-          }
-        },
-        {
-          "id": "art_body_p2",
-          "type": "text",
-          "style": {
-            "role": "article",
-            "x": 0.08,
-            "y": 0.27,
-            "w": 0.84,
-            "h": 0.64,
-            "fontSize": "18px",
-            "lineHeight": "1.55",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Even now, as I pursue a degree I can use from home, I sometimes feel like a failure-like I am letting my family down-simply because my life does not follow the timeline I once planned.\n\nChronic illness interrupts plans, careers, relationships, and identities. And when success is defined only by external markers, people who are ill can start to believe they are less than. That belief creates a painful cycle: grief and anxiety worsen symptoms, symptoms worsen grief and anxiety, and the loop tightens.\n\nSo what do we do?\n\nWe redefine success.\n\nWhen success becomes personal, it becomes possible again. Success might mean managing symptoms well enough to attend a child's recital. It might mean getting out of bed on a hard day, asking for help without shame, keeping boundaries, or celebrating a week of stability. These wins may look small from the outside, but they often require enormous courage.\n\nAnd this shift does not just help individuals. It helps all of us. The next time you are tempted to judge someone's life-maybe even your own-by productivity or status, pause and ask: What does thriving look like for this person, in their body, in this season of life?\n\nBecause in the end, success is not about how closely we match society's script. It is about how fully we honor our humanity-and how willing we are to see and celebrate the humanity in each other."
-          }
-        }
-      ],
-      "fallbackText": "Redefining Success (cont.)"
-    },
-    {
-      "id": "page_3",
-      "pageNumber": 3,
-      "isNumbered": true,
-      "elements": [
-        {
-          "id": "intro_title",
-          "type": "text",
-          "style": {
-            "role": "heading",
-            "x": 0.08,
-            "y": 0.08,
-            "w": 0.84,
-            "h": 0.08,
-            "fontSize": "36px",
-            "fontWeight": "750",
-            "lineHeight": "1.1",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": { "text": "Introduction Speech" }
-        },
-        {
-          "id": "shield_logo_icon",
-          "type": "image",
-          "style": { "x": 0.08, "y": 0.19, "w": 0.14, "h": 0.12 },
-          "linkUrl": "https://breathtakingawareness.com",
-          "content": {
-            "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/09/logo-watermark.png",
-            "alt": "Breathtaking Awareness logo watermark"
-          }
-        },
-        {
-          "id": "intro_body",
-          "type": "text",
-          "style": {
-            "role": "article",
-            "x": 0.08,
-            "y": 0.34,
-            "w": 0.84,
-            "h": 0.58,
-            "fontSize": "18px",
-            "lineHeight": "1.55",
-            "textAlign": "left"
-          },
-          "linkUrl": null,
-          "content": {
-            "text": "Attention Device Opener-\nDo any of you think Angalena Jolie is pretty, because her name sure is! BehindTheName.com says Jolie means pretty in French.\n\nCentral Idea-\nI would like for you to remember that Jolie is my name.\n\nSpecific Purpose-\nToday, I am going to show you the Jolie shield and explain its three parts-the fist, the logo, and the megaphone-because when you leave here today, I want you to know a bit about me, and that my pretty name is Jolie.\n\nI. The fist-solidarity, resistance, activism, and advocacy.\nA. I am a patient advocate and ambassador for legislative advocacy patient groups.\nB. I speak with Congress regularly about legislative and medical reform, and the needs of the rare disease community.\nC. I have done initiatives on Capitol Hill to raise awareness of the rare disease space.\n\n(Transition-While my advocacy work in Congress is important, another part of my identity has grown alongside it-my Breathtaking Awareness platform.)\n\nII. The logo-Breathtaking Awareness.\nA. I have had a website for over a decade to raise awareness of pulmonary arterial hypertension.\nB. I began using Breathtaking Awareness on social media a few years ago.\nC. I create personalized merchandise to raise awareness for conditions and patient advocacy.\n\n(Transition-And all of this awareness and advocacy connects to the last part of my shield, which is my voice.)\n\nIII. The megaphone-my voice.\nA. The purple ribbon represents pulmonary arterial hypertension; thus, a ribbon appears on the megaphone.\nB. I use my voice as the cohost of the Pulmonary Hypertension Association's podcast, PH Insights.\nC. I use my voice as a columnist for Pulmonary Hypertension News.\n\nConclusion-\nToday, you learned my name is Jolie and that Jolie means pretty. You have seen three parts of my Jolie shield, representing my advocacy, Breathtaking Awareness, and my voice. When you leave here today, I want you to remember my name, Jolie, because it stands for so much more than pretty."
-          }
-        }
-      ],
-      "fallbackText": "Introduction Speech"
+      "elements": []
     }
-  ],
-  "spreads": [
-    {
-      "id": "spread_1",
-      "pageLeftId": "page_blank_front",
-      "pageRightId": "page_1",
-      "pageLeftNumber": null,
-      "pageRightNumber": 1
-    },
-    {
-      "id": "spread_2",
-      "pageLeftId": "page_2",
-      "pageRightId": "page_3",
-      "pageLeftNumber": 2,
-      "pageRightNumber": 3
-    }
-  ],
-  "_debug": {
-    "generatedAt": "2026-01-08T00:00:00.000Z",
-    "notes": "Added pageCountHint for realistic page-stack thickness; content unchanged."
-  }
+  ]
 }

@@ -1,14 +1,15 @@
 /* =====================================================================
-   MAG PLUG — RUNTIME (magazine.js) — STABLE PATCHSET (WP)
+   MAG PLUG — RUNTIME (magazine.js) — STABLE PATCHSET (WP) — UPDATED
    Goals:
-   - Zero boot crashes (defensive DOM checks)
-   - Background NEVER moves
+   - Zero boot crashes (defensive DOM checks + idempotent boot guard)
+   - Background NEVER moves (no JS parallax; CSS locks vars)
    - Edge click (outer 16%) + middle click advances
    - Swipe left/right turns pages (includes covers)
    - True closed-cover states: front + back; last spread -> back cover
    - Hold-to-repeat on prev/next arrows (accelerating)
    - Knob menu order: 90, 45, Center, 45, 90
    - FIX: nav guard prevents double-turns from multiple handlers
+   - EXTRA: capture-phase event shield on stage to reduce interference if base runtime still exists
    ===================================================================== */
 (() => {
   const DEFAULT_BG_URL =
@@ -23,28 +24,40 @@
   };
 
   function parseConfig(el) {
-    try { return JSON.parse(el.getAttribute("data-config") || "{}"); }
-    catch (_) { return {}; }
+    try {
+      return JSON.parse(el.getAttribute("data-config") || "{}");
+    } catch (_) {
+      return {};
+    }
   }
 
   function prefersReducedMotion(cfg) {
     if (cfg && cfg.respectReducedMotion === false) return false;
-    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+    return !!(
+      window.matchMedia &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    );
   }
 
   function baseHrefFromJsonUrl(jsonUrl) {
     try {
       const u = new URL(jsonUrl, window.location.href);
-      u.hash = ""; u.search = "";
+      u.hash = "";
+      u.search = "";
       u.pathname = u.pathname.replace(/\/[^\/?#]+$/, "/");
       return u.toString();
-    } catch (_) { return ""; }
+    } catch (_) {
+      return "";
+    }
   }
 
   function resolveUrlMaybe(baseHref, url) {
     if (!url) return "";
-    try { return new URL(url, baseHref || window.location.href).toString(); }
-    catch (_) { return url; }
+    try {
+      return new URL(url, baseHref || window.location.href).toString();
+    } catch (_) {
+      return url;
+    }
   }
 
   async function fetchJson(url) {
@@ -57,9 +70,14 @@
     const baseHref = baseHrefFromJsonUrl(jsonUrl);
     let manifest = null;
 
-    const manifestUrl = (cfg && cfg.useManifest && cfg.manifestUrl) ? String(cfg.manifestUrl) : "";
+    const manifestUrl =
+      cfg && cfg.useManifest && cfg.manifestUrl ? String(cfg.manifestUrl) : "";
     if (manifestUrl) {
-      try { manifest = await fetchJson(manifestUrl); } catch (_) { manifest = null; }
+      try {
+        manifest = await fetchJson(manifestUrl);
+      } catch (_) {
+        manifest = null;
+      }
     }
 
     const viewer = await fetchJson(jsonUrl);
@@ -67,8 +85,16 @@
   }
 
   function makeSessionId() {
-    try { return "s_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
-    catch (_) { return "s_" + Date.now(); }
+    try {
+      return (
+        "s_" +
+        Math.random().toString(16).slice(2) +
+        "_" +
+        Date.now().toString(16)
+      );
+    } catch (_) {
+      return "s_" + Date.now();
+    }
   }
 
   async function sendEvent(cfg, issueId, sessionId, event, pageIndex = null, meta = {}) {
@@ -182,22 +208,45 @@
     function apply() {
       rootEl.style.setProperty("--mag-tilt-z", `${rot.toFixed(2)}deg`);
     }
-    function recenter() { rot = 0; apply(); }
-    function rotateBy(deg) { rot = (rot + deg) % 360; apply(); }
+    function recenter() {
+      rot = 0;
+      apply();
+    }
+    function rotateBy(deg) {
+      rot = (rot + deg) % 360;
+      apply();
+    }
 
     if (reduced) recenter();
+    else apply();
+
     return { recenter, rotateBy };
   }
 
+  function hardLockBgAndMotion(rootEl) {
+    // CSS already locks these, but we also set baseline values once.
+    rootEl.style.setProperty("--mag-bg-x", "0px");
+    rootEl.style.setProperty("--mag-bg-y", "0px");
+    rootEl.style.setProperty("--mag-bg-scale", "1");
+    rootEl.style.setProperty("--mag-tilt-x", "0deg");
+    rootEl.style.setProperty("--mag-tilt-y", "0deg");
+    rootEl.style.setProperty("--mag-parallax-z", "0px");
+    rootEl.style.setProperty("--mag-parallax-scale", "1");
+  }
+
   function applyManifestTheme(shell, rootEl, cfg, manifest, baseHref) {
-    const bgFromManifest = manifest && manifest.background ? (manifest.background.image || manifest.background.imageUrl || "") : "";
-    const bgUrl = resolveUrlMaybe(baseHref, bgFromManifest || (cfg && cfg.backgroundUrl) || DEFAULT_BG_URL);
+    const bgFromManifest =
+      manifest && manifest.background
+        ? manifest.background.image || manifest.background.imageUrl || ""
+        : "";
+    const bgUrl = resolveUrlMaybe(
+      baseHref,
+      bgFromManifest || (cfg && cfg.backgroundUrl) || DEFAULT_BG_URL
+    );
     shell.bg.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : "none";
 
     // Hard lock background motion: always centered
-    rootEl.style.setProperty("--mag-bg-x", "0px");
-    rootEl.style.setProperty("--mag-bg-y", "0px");
-    rootEl.style.setProperty("--mag-bg-scale", "1.0");
+    hardLockBgAndMotion(rootEl);
 
     shell.propsLayer.innerHTML = "";
   }
@@ -214,19 +263,21 @@
 
   function normalizeSpreads(viewer, byId) {
     const spreads = Array.isArray(viewer?.spreads) ? viewer.spreads : [];
-    return spreads.map((s, si) => {
-      const leftRef = byId.get(s.pageLeftId);
-      const rightRef = byId.get(s.pageRightId);
-      return {
-        spreadIndex: si,
-        id: s.id || `spread_${si}`,
-        left: leftRef ? leftRef.page : null,
-        right: rightRef ? rightRef.page : null,
-        leftIdx: leftRef ? leftRef.idx : null,
-        pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
-        pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
-      };
-    }).filter(s => s.left || s.right);
+    return spreads
+      .map((s, si) => {
+        const leftRef = byId.get(s.pageLeftId);
+        const rightRef = byId.get(s.pageRightId);
+        return {
+          spreadIndex: si,
+          id: s.id || `spread_${si}`,
+          left: leftRef ? leftRef.page : null,
+          right: rightRef ? rightRef.page : null,
+          leftIdx: leftRef ? leftRef.idx : null,
+          pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
+          pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
+        };
+      })
+      .filter((s) => s.left || s.right);
   }
 
   function elementToDom(node, baseHref) {
@@ -234,7 +285,11 @@
     el.className = "mag-plug-el";
 
     const st = node && node.style && typeof node.style === "object" ? node.style : {};
-    const x = getNum(st.x, 0), y = getNum(st.y, 0), w = getNum(st.w, 0), h = getNum(st.h, 0);
+    const x = getNum(st.x, 0),
+      y = getNum(st.y, 0),
+      w = getNum(st.w, 0),
+      h = getNum(st.h, 0);
+
     el.style.left = x * 100 + "%";
     el.style.top = y * 100 + "%";
     el.style.width = w * 100 + "%";
@@ -246,16 +301,21 @@
       img.alt = String((node.content && node.content.alt) || "");
       img.loading = "lazy";
       img.decoding = "async";
-      img.src = resolveUrlMaybe(baseHref, node.content && node.content.imageUrl ? node.content.imageUrl : "");
+      img.src = resolveUrlMaybe(
+        baseHref,
+        node.content && node.content.imageUrl ? node.content.imageUrl : ""
+      );
       el.appendChild(img);
     } else {
       const t = document.createElement("div");
       t.className = "mag-plug-el-text";
       t.textContent = String((node.content && node.content.text) || "");
-      const fs = node.content && node.content.fontSize ? getNum(node.content.fontSize, 0) : 0;
+      const fs =
+        node.content && node.content.fontSize ? getNum(node.content.fontSize, 0) : 0;
       if (fs) t.style.fontSize = `${fs}px`;
       if (node.content && node.content.color) t.style.color = String(node.content.color);
-      if (node.content && node.content.fontFamily) t.style.fontFamily = String(node.content.fontFamily);
+      if (node.content && node.content.fontFamily)
+        t.style.fontFamily = String(node.content.fontFamily);
       el.appendChild(t);
     }
 
@@ -268,43 +328,58 @@
       a.rel = "noopener";
       a.style.position = "absolute";
       a.style.inset = "0";
-      a.setAttribute("aria-label", String((node.content && node.content.ariaLabel) || "Open link"));
+      a.setAttribute(
+        "aria-label",
+        String((node.content && node.content.ariaLabel) || "Open link")
+      );
       el.appendChild(a);
     }
+
     return el;
   }
 
   function getCoverFromSources(cfg, viewer, manifest, baseHref) {
-    const mCover = manifest && manifest.cover ? (manifest.cover.image || manifest.cover.imageUrl || "") : "";
+    const mCover =
+      manifest && manifest.cover ? manifest.cover.image || manifest.cover.imageUrl || "" : "";
     const cfgCover = cfg && cfg.coverImageUrl ? cfg.coverImageUrl : "";
     const vCover = viewer && (viewer.coverImageUrl || viewer.cover_image_url || "");
     const coverFront = resolveUrlMaybe(baseHref, mCover || cfgCover || vCover || "");
-    const coverText = String((cfg && cfg.coverText) || (manifest && manifest.cover ? manifest.cover.text || "" : "") || "").trim();
+    const coverText = String(
+      (cfg && cfg.coverText) ||
+        (manifest && manifest.cover ? manifest.cover.text || "" : "") ||
+        ""
+    ).trim();
     return { coverFront, coverText };
   }
 
   function getBackCoverFromViewer(viewer, baseHref, fallbackFront) {
-    const vBack = viewer && (viewer.backCoverImageUrl || viewer.back_cover_image_url || viewer.backCoverUrl || "");
+    const vBack =
+      viewer &&
+      (viewer.backCoverImageUrl ||
+        viewer.back_cover_image_url ||
+        viewer.backCoverUrl ||
+        "");
     const direct = resolveUrlMaybe(baseHref, String(vBack || ""));
     if (direct) return direct;
 
     // fallback: last image found in last page
     try {
-      const pages = (viewer && Array.isArray(viewer.pages)) ? viewer.pages : [];
+      const pages = viewer && Array.isArray(viewer.pages) ? viewer.pages : [];
       for (let i = pages.length - 1; i >= 0; i--) {
         const p = pages[i];
         const els = p && Array.isArray(p.elements) ? p.elements : [];
-        const img = els.find(e => e && e.type === "image" && e.content && e.content.imageUrl);
+        const img = els.find((e) => e && e.type === "image" && e.content && e.content.imageUrl);
         if (img) return resolveUrlMaybe(baseHref, String(img.content.imageUrl || "")) || fallbackFront;
       }
     } catch (_) {}
+
     return fallbackFront || "";
   }
 
   function renderCover(objectEl, coverFrontUrl, coverBackUrl, coverText, startSide, onOpen) {
     objectEl.innerHTML = "";
 
-    const side = (startSide === "back") ? "back" : "front";
+    const side = startSide === "back" ? "back" : "front";
 
     const cover = document.createElement("button");
     cover.type = "button";
@@ -336,12 +411,30 @@
       cover.appendChild(t);
     }
 
+    const doOpen = () => {
+      try {
+        onOpen();
+      } catch (_) {}
+    };
+
+    cover.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      doOpen();
+    });
+
     cover.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        e.stopPropagation();
+        doOpen();
+      }
     });
 
     objectEl.appendChild(cover);
-    try { cover.focus({ preventScroll: true }); } catch (_) {}
+    try {
+      cover.focus({ preventScroll: true });
+    } catch (_) {}
   }
 
   function renderSpread(objectEl, leftPage, rightPage, baseHref) {
@@ -358,7 +451,11 @@
     pageL.className = "mag-plug-page left";
     const sheetL = document.createElement("div");
     sheetL.className = "mag-plug-sheet";
-    (Array.isArray(leftPage?.elements) ? leftPage.elements : []).forEach((n) => sheetL.appendChild(elementToDom(n, baseHref)));
+    (Array.isArray(leftPage?.elements) ? leftPage.elements : []).forEach((n) => {
+      try {
+        sheetL.appendChild(elementToDom(n, baseHref));
+      } catch (_) {}
+    });
     pageL.appendChild(sheetL);
 
     const gutter = document.createElement("div");
@@ -368,7 +465,11 @@
     pageR.className = "mag-plug-page right";
     const sheetR = document.createElement("div");
     sheetR.className = "mag-plug-sheet";
-    (Array.isArray(rightPage?.elements) ? rightPage.elements : []).forEach((n) => sheetR.appendChild(elementToDom(n, baseHref)));
+    (Array.isArray(rightPage?.elements) ? rightPage.elements : []).forEach((n) => {
+      try {
+        sheetR.appendChild(elementToDom(n, baseHref));
+      } catch (_) {}
+    });
     pageR.appendChild(sheetR);
 
     spread.appendChild(pageL);
@@ -392,11 +493,10 @@
   }
 
   function attachNav(ui, state, transform) {
-    // Defensive: never crash on missing nodes
     if (!ui || !state || !transform) return;
     if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
 
-    // HARD RESET prev/next buttons to remove any existing listeners from other scripts/plugins
+    // HARD RESET prev/next to remove existing listeners
     {
       const prevClone = ui.btnPrev.cloneNode(true);
       ui.btnPrev.replaceWith(prevClone);
@@ -407,21 +507,24 @@
       ui.btnNext = nextClone;
     }
 
-    // Close handler (simple click)
-    ui.btnClose.addEventListener("click", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      state.goCover("front");
-    }, true);
+    ui.btnClose.addEventListener(
+      "click",
+      (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        state.goCover("front");
+      },
+      true
+    );
 
-    // prev/next: tap = 1 step, hold = repeat AFTER delay, then slowly accelerates
-    const HOLD_DELAY = 900;     // ms before repeating starts
-    const REPEAT_START = 420;   // initial repeat (ms)
-    const REPEAT_MIN = 220;     // fastest repeat (ms)
-    const ACCEL_EVERY = 900;    // ms between speed-ups
-    const ACCEL_STEP = 25;      // ms faster each accel tick
+    // prev/next: tap = 1 step, hold = repeat AFTER delay, then accelerates
+    const HOLD_DELAY = 900;
+    const REPEAT_START = 420;
+    const REPEAT_MIN = 220;
+    const ACCEL_EVERY = 900;
+    const ACCEL_STEP = 25;
 
-    function bindHoldToRepeat(btn, stepFn /* (force:boolean)=>void */) {
+    function bindHoldToRepeat(btn, stepFn) {
       let holdTimer = 0;
       let repeatTimer = 0;
       let accelTimer = 0;
@@ -429,22 +532,34 @@
       let rate = REPEAT_START;
 
       const clearAll = () => {
-        if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
-        if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = 0; }
-        if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
+        if (holdTimer) {
+          clearTimeout(holdTimer);
+          holdTimer = 0;
+        }
+        if (repeatTimer) {
+          clearInterval(repeatTimer);
+          repeatTimer = 0;
+        }
+        if (accelTimer) {
+          clearInterval(accelTimer);
+          accelTimer = 0;
+        }
       };
 
-      // IMPORTANT: swallow click so no other handler runs
-      btn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }, true);
+      // Swallow click so no other handler runs
+      btn.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+        },
+        true
+      );
 
       const startRepeat = () => {
         isHeld = true;
         rate = REPEAT_START;
 
-        // do NOT step immediately; first repeat happens after `rate` ms
         repeatTimer = setInterval(() => stepFn(true), rate);
 
         accelTimer = setInterval(() => {
@@ -456,25 +571,51 @@
         }, ACCEL_EVERY);
       };
 
-      btn.addEventListener("pointerdown", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        isHeld = false;
-        clearAll();
-        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-        holdTimer = setTimeout(startRepeat, HOLD_DELAY);
-      }, true);
+      btn.addEventListener(
+        "pointerdown",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          isHeld = false;
+          clearAll();
+          try {
+            btn.setPointerCapture(e.pointerId);
+          } catch (_) {}
+          holdTimer = setTimeout(startRepeat, HOLD_DELAY);
+        },
+        true
+      );
 
-      btn.addEventListener("pointerup", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        const doSingle = !isHeld;
-        clearAll();
-        if (doSingle) stepFn(false);
-      }, true);
+      btn.addEventListener(
+        "pointerup",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          const doSingle = !isHeld;
+          clearAll();
+          if (doSingle) stepFn(false);
+        },
+        true
+      );
 
-      btn.addEventListener("pointercancel", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); }, true);
-      btn.addEventListener("pointerleave", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); }, true);
+      btn.addEventListener(
+        "pointercancel",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          clearAll();
+        },
+        true
+      );
+      btn.addEventListener(
+        "pointerleave",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          clearAll();
+        },
+        true
+      );
     }
 
     bindHoldToRepeat(ui.btnPrev, (force) => state.goPrev(force));
@@ -505,17 +646,24 @@
         if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
         closeKnob();
       });
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
+
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") closeKnob();
+      });
 
       ui.knobMenu.addEventListener("click", (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
         const act = t.getAttribute("data-action");
         if (!act) return;
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         closeKnob();
 
-        if (act === "center") { transform.recenter(); return; }
+        if (act === "center") {
+          transform.recenter();
+          return;
+        }
         if (act === "rot-45") transform.rotateBy(-45);
         if (act === "rot+45") transform.rotateBy(45);
         if (act === "rot-90") transform.rotateBy(-90);
@@ -525,18 +673,29 @@
 
     // page jump
     if (ui.pageJumpBtn && ui.pageInput) {
-      ui.pageJumpBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        ui.pageInput.value = "";
-        ui.pageInput.classList.add("is-open");
-        try { ui.pageInput.focus({ preventScroll: true }); ui.pageInput.select(); } catch (_) {}
-      });
+      ui.pageJumpBtn.addEventListener(
+        "click",
+        (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          ui.pageInput.value = "";
+          ui.pageInput.classList.add("is-open");
+          try {
+            ui.pageInput.focus({ preventScroll: true });
+            ui.pageInput.select();
+          } catch (_) {}
+        },
+        true
+      );
 
       const closePageInput = () => ui.pageInput.classList.remove("is-open");
 
       ui.pageInput.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") { e.preventDefault(); closePageInput(); return; }
+        if (e.key === "Escape") {
+          e.preventDefault();
+          closePageInput();
+          return;
+        }
         if (e.key === "Enter") {
           e.preventDefault();
           const v = parseInt(String(ui.pageInput.value || ""), 10);
@@ -544,70 +703,64 @@
           if (Number.isFinite(v)) state.goToPage(v);
         }
       });
+
       ui.pageInput.addEventListener("blur", () => closePageInput());
     }
   }
 
   function attachKeyboard(wrapper, cfg, state) {
     if (!cfg || !cfg.enableKeyboard) return;
+
     wrapper.addEventListener("keydown", (e) => {
-      const tag = (e.target && e.target.tagName) ? String(e.target.tagName).toLowerCase() : "";
+      const tag =
+        e.target && e.target.tagName ? String(e.target.tagName).toLowerCase() : "";
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (e.key === "ArrowLeft") { e.preventDefault(); state.goPrev(false); }
-      if (e.key === "ArrowRight") { e.preventDefault(); state.goNext(false); }
-      if (e.key === "Escape") { e.preventDefault(); state.goCover("front"); }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        state.goPrev(false);
+      }
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        state.goNext(false);
+      }
+      if (e.key === "Escape") {
+        e.preventDefault();
+        state.goCover("front");
+      }
     });
   }
 
-  function attachParallax(stageEl, cfg, rootEl) {
-    // Background motion is DISABLED by design.
-    if (prefersReducedMotion(cfg)) return () => {};
-    const root = rootEl || stageEl.closest(".mag-plug") || document.documentElement;
+  function attachParallax(_stageEl, _cfg, rootEl) {
+    // UPDATED: no parallax at all (CSS already locks; avoids fights + CPU churn)
+    if (rootEl) hardLockBgAndMotion(rootEl);
+    return () => {};
+  }
 
-    let raf = 0;
-    let tx = 0, ty = 0;
+  function attachEventShield(stageEl) {
+    // Capture-phase shield to reduce interference if another runtime is still attached.
+    // We do NOT block clicks on controls/inputs/links.
+    const shouldIgnore = (t) => {
+      if (!t || !(t instanceof HTMLElement)) return false;
+      const tag = t.tagName ? String(t.tagName).toLowerCase() : "";
+      if (tag === "button" || tag === "input" || tag === "a" || tag === "select" || tag === "textarea")
+        return true;
+      if (t.closest && (t.closest(".mag-plug-controls") || t.closest(".mag-plug-knob-menu"))) return true;
+      return false;
+    };
 
-    function apply() {
-      raf = 0;
-      root.style.setProperty("--mag-tilt-x", `${ty.toFixed(2)}deg`);
-      root.style.setProperty("--mag-tilt-y", `${tx.toFixed(2)}deg`);
-      // hard lock background vars
-      root.style.setProperty("--mag-bg-x", "0px");
-      root.style.setProperty("--mag-bg-y", "0px");
-    }
+    const stop = (e) => {
+      if (shouldIgnore(e.target)) return;
+      // Stop other handlers from seeing this (best-effort).
+      e.stopPropagation();
+    };
 
-    function onMove(clientX, clientY) {
-      const r = stageEl.getBoundingClientRect();
-      const nx = (clientX - (r.left + r.width / 2)) / (r.width / 2);
-      const ny = (clientY - (r.top + r.height / 2)) / (r.height / 2);
-      const cx = clamp(nx, -1, 1);
-      const cy = clamp(ny, -1, 1);
-
-      tx = cx * 8;         // rotateY
-      ty = -cy * 6;        // rotateX
-
-      if (!raf) raf = requestAnimationFrame(apply);
-    }
-
-    function reset() { tx = ty = 0; if (!raf) raf = requestAnimationFrame(apply); }
-
-    const onPointerMove = (e) => onMove(e.clientX, e.clientY);
-    const onTouchMove = (e) => { if (e.touches && e.touches.length) onMove(e.touches[0].clientX, e.touches[0].clientY); };
-
-    stageEl.addEventListener("pointermove", onPointerMove, { passive: true });
-    stageEl.addEventListener("pointerleave", reset, { passive: true });
-    stageEl.addEventListener("touchmove", onTouchMove, { passive: true });
-    stageEl.addEventListener("touchend", reset, { passive: true });
-
-    // initialize
-    reset();
+    stageEl.addEventListener("click", stop, true);
+    stageEl.addEventListener("pointerup", stop, true);
 
     return () => {
-      stageEl.removeEventListener("pointermove", onPointerMove);
-      stageEl.removeEventListener("pointerleave", reset);
-      stageEl.removeEventListener("touchmove", onTouchMove);
-      stageEl.removeEventListener("touchend", reset);
+      stageEl.removeEventListener("click", stop, true);
+      stageEl.removeEventListener("pointerup", stop, true);
     };
   }
 
@@ -620,22 +773,25 @@
     const SWIPE_MAX_Y_PX = 80;
 
     let down = false;
-    let sx = 0, sy = 0, st = 0;
+    let sx = 0,
+      sy = 0,
+      st = 0;
 
     const getPoint = (e) => {
-      if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      if (e.touches && e.touches.length)
+        return { x: e.touches[0].clientX, y: e.touches[0].clientY };
       return { x: e.clientX, y: e.clientY };
     };
 
     const onDown = (e) => {
-      // Don't steal from inputs/buttons/links
       const t = e.target;
       const tag = t && t.tagName ? String(t.tagName).toLowerCase() : "";
       if (tag === "button" || tag === "input" || tag === "a") return;
 
       down = true;
       const p = getPoint(e);
-      sx = p.x; sy = p.y;
+      sx = p.x;
+      sy = p.y;
       st = Date.now();
     };
 
@@ -689,12 +845,23 @@
   }
 
   function getRoots() {
-    return qa(".bcs-mag, .mag-plug").filter(el => el instanceof HTMLElement && el.getAttribute("data-json-url"));
+    // Only elements explicitly configured with data-json-url
+    return qa(".bcs-mag, .mag-plug").filter(
+      (el) => el instanceof HTMLElement && !!el.getAttribute("data-json-url")
+    );
   }
 
   async function bootOne(rootEl) {
+    if (!(rootEl instanceof HTMLElement)) return;
+
+    // Idempotent boot guard (prevents double-init if multiple runtimes try to boot)
+    if (rootEl.__bcsMagBooted) return;
+    rootEl.__bcsMagBooted = true;
+
     const cfg = parseConfig(rootEl);
     const jsonUrl = rootEl.getAttribute("data-json-url") || "";
+    if (!jsonUrl) return;
+
     const issueId = String(cfg.issueId || "issue");
     const sessionId = makeSessionId();
 
@@ -707,10 +874,13 @@
 
     const transform = makeTransformController(rootEl, cfg);
     const detachParallax = attachParallax(shell.stage, cfg, rootEl);
+    const detachShield = attachEventShield(shell.stage);
 
     setLabel(ui, "Loading…", false);
 
-    let viewer = null, manifest = null, baseHref = "";
+    let viewer = null,
+      manifest = null,
+      baseHref = "";
     try {
       const loaded = await loadIssue(cfg, jsonUrl);
       viewer = loaded.viewer;
@@ -721,6 +891,7 @@
       if (ui.btnPrev) ui.btnPrev.disabled = true;
       if (ui.btnNext) ui.btnNext.disabled = true;
       detachParallax();
+      detachShield();
       return;
     }
 
@@ -734,6 +905,7 @@
       if (ui.btnPrev) ui.btnPrev.disabled = true;
       if (ui.btnNext) ui.btnNext.disabled = true;
       detachParallax();
+      detachShield();
       return;
     }
 
@@ -744,8 +916,8 @@
 
     rootEl.style.setProperty("--mag-cover-front", coverFront ? `url("${coverFront}")` : "none");
 
-    // NAV GUARD: prevents double-turns from multiple handlers firing on one press
-    const NAV_GUARD_MS = 420; // minimum time between single-step turns
+    // NAV GUARD: prevents double-turns
+    const NAV_GUARD_MS = 420;
     let lastNavAt = 0;
 
     const state = {
@@ -757,11 +929,13 @@
 
       goCover: (side = "front") => {
         state.isOpen = false;
-        state.coverSide = (side === "back") ? "back" : "front";
+        state.coverSide = side === "back" ? "back" : "front";
         shell.wrapper.classList.remove("is-open");
         shell.wrapper.classList.remove("is-opening");
 
-        renderCover(shell.object, coverFront, coverBack, coverText, state.coverSide, () => state.openIssue());
+        renderCover(shell.object, coverFront, coverBack, coverText, state.coverSide, () =>
+          state.openIssue()
+        );
 
         if (ui.btnPrev) ui.btnPrev.disabled = true;
         if (ui.btnNext) ui.btnNext.disabled = false;
@@ -794,10 +968,16 @@
         let idx = 0;
         for (let s = 0; s < spreads.length; s++) {
           const sp = spreads[s];
-          if (sp.pageLeftNumber === pn || sp.pageRightNumber === pn) { idx = s; break; }
-          const approxLeft = (s * 2) + 1;
+          if (sp.pageLeftNumber === pn || sp.pageRightNumber === pn) {
+            idx = s;
+            break;
+          }
+          const approxLeft = s * 2 + 1;
           const approxRight = approxLeft + 1;
-          if (approxLeft === pn || approxRight === pn) { idx = s; break; }
+          if (approxLeft === pn || approxRight === pn) {
+            idx = s;
+            break;
+          }
         }
         state.openToSpread(idx);
       },
@@ -822,36 +1002,43 @@
 
         updateStacks(shell.stage, state.spreadIndex, spreads.length);
 
-        const pageIndex = (s.leftIdx !== null && s.leftIdx !== undefined) ? s.leftIdx : null;
-        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, { spread: true, spread_id: s.id });
+        const pageIndex = s.leftIdx !== null && s.leftIdx !== undefined ? s.leftIdx : null;
+        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, {
+          spread: true,
+          spread_id: s.id,
+        });
       },
 
       goPrev: (force = false) => {
         const now = Date.now();
-        if (!force && (now - lastNavAt) < NAV_GUARD_MS) return;
+        if (!force && now - lastNavAt < NAV_GUARD_MS) return;
         lastNavAt = now;
 
         if (!state.isOpen) {
-          // closed back cover -> open to last spread
-          if (state.coverSide === "back") { state.openToSpread(spreads.length - 1); }
+          if (state.coverSide === "back") state.openToSpread(spreads.length - 1);
           return;
         }
-        if (state.spreadIndex <= 0) { state.goCover("front"); return; }
+        if (state.spreadIndex <= 0) {
+          state.goCover("front");
+          return;
+        }
         state.spreadIndex = clamp(state.spreadIndex - 1, 0, spreads.length - 1);
         state.render();
       },
 
       goNext: (force = false) => {
         const now = Date.now();
-        if (!force && (now - lastNavAt) < NAV_GUARD_MS) return;
+        if (!force && now - lastNavAt < NAV_GUARD_MS) return;
         lastNavAt = now;
 
         if (!state.isOpen) {
-          // closed front cover -> open to first spread
-          if (state.coverSide === "front") { state.openToSpread(0); }
+          if (state.coverSide === "front") state.openToSpread(0);
           return;
         }
-        if (state.spreadIndex >= spreads.length - 1) { state.goCover("back"); return; }
+        if (state.spreadIndex >= spreads.length - 1) {
+          state.goCover("back");
+          return;
+        }
         state.spreadIndex = clamp(state.spreadIndex + 1, 0, spreads.length - 1);
         state.render();
       },
@@ -866,9 +1053,12 @@
   }
 
   function bootAll() {
-    getRoots().forEach((el) => { bootOne(el); });
+    getRoots().forEach((el) => {
+      bootOne(el);
+    });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootAll);
   else bootAll();
 })();
+

@@ -8,6 +8,7 @@
    - True closed-cover states: front + back; last spread -> back cover
    - Hold-to-repeat on prev/next arrows (accelerating)
    - Knob menu order: 90, 45, Center, 45, 90
+   - FIX: nav guard prevents double-turns from multiple handlers
    ===================================================================== */
 (() => {
   const DEFAULT_BG_URL =
@@ -394,88 +395,91 @@
     // Defensive: never crash on missing nodes
     if (!ui || !state || !transform) return;
     if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
-     // HARD RESET prev/next buttons to remove any existing listeners from other scripts/plugins
-{
-  const prevClone = ui.btnPrev.cloneNode(true);
-  ui.btnPrev.replaceWith(prevClone);
-  ui.btnPrev = prevClone;
 
-  const nextClone = ui.btnNext.cloneNode(true);
-  ui.btnNext.replaceWith(nextClone);
-  ui.btnNext = nextClone;
-}
+    // HARD RESET prev/next buttons to remove any existing listeners from other scripts/plugins
+    {
+      const prevClone = ui.btnPrev.cloneNode(true);
+      ui.btnPrev.replaceWith(prevClone);
+      ui.btnPrev = prevClone;
 
+      const nextClone = ui.btnNext.cloneNode(true);
+      ui.btnNext.replaceWith(nextClone);
+      ui.btnNext = nextClone;
+    }
 
-    // click handlers
-   // close handler (keep this as click; no repeat needed)
+    // Close handler (simple click)
+    ui.btnClose.addEventListener("click", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      state.goCover("front");
+    }, true);
 
-// prev/next: tap = 1 step, hold = repeat AFTER delay, then slowly accelerates
-const HOLD_DELAY = 900;     // ms before repeating starts
-const REPEAT_START = 420;   // initial repeat (ms)
-const REPEAT_MIN = 220;     // fastest repeat (ms)
-const ACCEL_EVERY = 900;    // ms between speed-ups
-const ACCEL_STEP = 25;      // ms faster each accel tick
+    // prev/next: tap = 1 step, hold = repeat AFTER delay, then slowly accelerates
+    const HOLD_DELAY = 900;     // ms before repeating starts
+    const REPEAT_START = 420;   // initial repeat (ms)
+    const REPEAT_MIN = 220;     // fastest repeat (ms)
+    const ACCEL_EVERY = 900;    // ms between speed-ups
+    const ACCEL_STEP = 25;      // ms faster each accel tick
 
-function bindHoldToRepeat(btn, stepFn) {
-  let holdTimer = 0;
-  let repeatTimer = 0;
-  let accelTimer = 0;
-  let isHeld = false;
-  let rate = REPEAT_START;
+    function bindHoldToRepeat(btn, stepFn /* (force:boolean)=>void */) {
+      let holdTimer = 0;
+      let repeatTimer = 0;
+      let accelTimer = 0;
+      let isHeld = false;
+      let rate = REPEAT_START;
 
-  const clearAll = () => {
-    if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
-    if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = 0; }
-    if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
-  };
+      const clearAll = () => {
+        if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
+        if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = 0; }
+        if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
+      };
 
-  // IMPORTANT: swallow click so no other handler runs
-  btn.addEventListener("click", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, true);
+      // IMPORTANT: swallow click so no other handler runs
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+      }, true);
 
-  const startRepeat = () => {
-    isHeld = true;
-    rate = REPEAT_START;
+      const startRepeat = () => {
+        isHeld = true;
+        rate = REPEAT_START;
 
-    // do NOT step immediately; first repeat happens after `rate` ms
-    repeatTimer = setInterval(stepFn, rate);
+        // do NOT step immediately; first repeat happens after `rate` ms
+        repeatTimer = setInterval(() => stepFn(true), rate);
 
-    accelTimer = setInterval(() => {
-      rate = Math.max(REPEAT_MIN, rate - ACCEL_STEP);
-      if (repeatTimer) {
-        clearInterval(repeatTimer);
-        repeatTimer = setInterval(stepFn, rate);
-      }
-    }, ACCEL_EVERY);
-  };
+        accelTimer = setInterval(() => {
+          rate = Math.max(REPEAT_MIN, rate - ACCEL_STEP);
+          if (repeatTimer) {
+            clearInterval(repeatTimer);
+            repeatTimer = setInterval(() => stepFn(true), rate);
+          }
+        }, ACCEL_EVERY);
+      };
 
-  btn.addEventListener("pointerdown", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    isHeld = false;
-    clearAll();
-    try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-    holdTimer = setTimeout(startRepeat, HOLD_DELAY);
-  });
+      btn.addEventListener("pointerdown", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        isHeld = false;
+        clearAll();
+        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
+        holdTimer = setTimeout(startRepeat, HOLD_DELAY);
+      }, true);
 
-  btn.addEventListener("pointerup", (e) => {
-    e.preventDefault();
-    e.stopPropagation();
-    const doSingle = !isHeld;
-    clearAll();
-    if (doSingle) stepFn();
-  });
+      btn.addEventListener("pointerup", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const doSingle = !isHeld;
+        clearAll();
+        if (doSingle) stepFn(false);
+      }, true);
 
-  btn.addEventListener("pointercancel", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); });
-  btn.addEventListener("pointerleave", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); });
-}
+      btn.addEventListener("pointercancel", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); }, true);
+      btn.addEventListener("pointerleave", (e) => { e.preventDefault(); e.stopPropagation(); clearAll(); }, true);
+    }
 
-bindHoldToRepeat(ui.btnPrev, () => state.goPrev());
-bindHoldToRepeat(ui.btnNext, () => state.goNext());
+    bindHoldToRepeat(ui.btnPrev, (force) => state.goPrev(force));
+    bindHoldToRepeat(ui.btnNext, (force) => state.goNext(force));
 
-     
     // knob menu
     if (ui.knobBtn && ui.knobMenu) {
       let knobOpen = false;
@@ -490,12 +494,20 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
         ui.knobBtn.setAttribute("aria-expanded", knobOpen ? "true" : "false");
       };
 
+      ui.knobBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        toggleKnob();
+      });
+
+      document.addEventListener("pointerdown", (e) => {
         if (!knobOpen) return;
         if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
         closeKnob();
       });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
 
+      ui.knobMenu.addEventListener("click", (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
         const act = t.getAttribute("data-action");
@@ -513,11 +525,14 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
 
     // page jump
     if (ui.pageJumpBtn && ui.pageInput) {
-      const openPageInput = () => {
+      ui.pageJumpBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
         ui.pageInput.value = "";
         ui.pageInput.classList.add("is-open");
         try { ui.pageInput.focus({ preventScroll: true }); ui.pageInput.select(); } catch (_) {}
-      };
+      });
+
       const closePageInput = () => ui.pageInput.classList.remove("is-open");
 
       ui.pageInput.addEventListener("keydown", (e) => {
@@ -539,8 +554,8 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
       const tag = (e.target && e.target.tagName) ? String(e.target.tagName).toLowerCase() : "";
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
-      if (e.key === "ArrowLeft") { e.preventDefault(); state.goPrev(); }
-      if (e.key === "ArrowRight") { e.preventDefault(); state.goNext(); }
+      if (e.key === "ArrowLeft") { e.preventDefault(); state.goPrev(false); }
+      if (e.key === "ArrowRight") { e.preventDefault(); state.goNext(false); }
       if (e.key === "Escape") { e.preventDefault(); state.goCover("front"); }
     });
   }
@@ -637,8 +652,8 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
 
       // Swipe
       if (adx >= SWIPE_MIN_PX && ady <= SWIPE_MAX_Y_PX) {
-        if (dx < 0) state.goNext();
-        else state.goPrev();
+        if (dx < 0) state.goNext(false);
+        else state.goPrev(false);
         return;
       }
 
@@ -654,9 +669,9 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
           return;
         }
 
-        if (nx <= EDGE) state.goPrev();
-        else if (nx >= 1 - EDGE) state.goNext();
-        else state.goNext(); // middle advances
+        if (nx <= EDGE) state.goPrev(false);
+        else if (nx >= 1 - EDGE) state.goNext(false);
+        else state.goNext(false); // middle advances
       }
     };
 
@@ -728,6 +743,10 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
     const coverText = coverInfo.coverText || "";
 
     rootEl.style.setProperty("--mag-cover-front", coverFront ? `url("${coverFront}")` : "none");
+
+    // NAV GUARD: prevents double-turns from multiple handlers firing on one press
+    const NAV_GUARD_MS = 420; // minimum time between single-step turns
+    let lastNavAt = 0;
 
     const state = {
       isOpen: false,
@@ -807,7 +826,11 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
         sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, { spread: true, spread_id: s.id });
       },
 
-      goPrev: () => {
+      goPrev: (force = false) => {
+        const now = Date.now();
+        if (!force && (now - lastNavAt) < NAV_GUARD_MS) return;
+        lastNavAt = now;
+
         if (!state.isOpen) {
           // closed back cover -> open to last spread
           if (state.coverSide === "back") { state.openToSpread(spreads.length - 1); }
@@ -818,7 +841,11 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
         state.render();
       },
 
-      goNext: () => {
+      goNext: (force = false) => {
+        const now = Date.now();
+        if (!force && (now - lastNavAt) < NAV_GUARD_MS) return;
+        lastNavAt = now;
+
         if (!state.isOpen) {
           // closed front cover -> open to first spread
           if (state.coverSide === "front") { state.openToSpread(0); }

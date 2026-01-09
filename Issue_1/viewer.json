@@ -13,17 +13,69 @@
   },
 
   "pageCountHint": 48,
+
   "toc": [
     { "label": "Redefining Success", "pageNumber": 1 },
-    { "label": "Redefining Success (cont.)", "pageNumber": 2 },
     { "label": "Introduction Speech", "pageNumber": 3 }
   ],
+
   "pages": [
     {
-      "id": "page_blank_front",
-      "pageNumber": null,
-      "isNumbered": false,
-      "elements": []
+      "id": "page_1",
+      "pageNumber": 1,
+      "isNumbered": true,
+      "fallbackText": "Page 1",
+      "elements": [
+        {
+          "id": "t1",
+          "type": "text",
+          "linkUrl": null,
+          "style": { "x": 0.08, "y": 0.10, "w": 0.84, "h": 0.12 },
+          "content": { "text": "Redefining Success", "fontSize": 34, "color": "#111111" }
+        },
+        {
+          "id": "t2",
+          "type": "text",
+          "linkUrl": null,
+          "style": { "x": 0.08, "y": 0.25, "w": 0.84, "h": 0.18 },
+          "content": { "text": "This is placeholder text. Replace with your real content.", "fontSize": 16, "color": "#111111" }
+        }
+      ]
+    },
+    {
+      "id": "page_2",
+      "pageNumber": 2,
+      "isNumbered": true,
+      "fallbackText": "Page 2",
+      "elements": [
+        {
+          "id": "img1",
+          "type": "image",
+          "linkUrl": "https://breathtakingawareness.com",
+          "style": { "x": 0.08, "y": 0.10, "w": 0.84, "h": 0.60 },
+          "content": {
+            "imageUrl": "https://images.unsplash.com/photo-1526772662000-3f88f10405ff?auto=format&fit=crop&w=1200&q=60",
+            "alt": "Placeholder image"
+          }
+        },
+        {
+          "id": "t3",
+          "type": "text",
+          "linkUrl": null,
+          "style": { "x": 0.08, "y": 0.74, "w": 0.84, "h": 0.16 },
+          "content": { "text": "Caption text goes here.", "fontSize": 14, "color": "#111111" }
+        }
+      ]
+    }
+  ],
+
+  "spreads": [
+    {
+      "id": "spread_1",
+      "pageLeftId": "page_1",
+      "pageRightId": "page_2",
+      "pageLeftNumber": 1,
+      "pageRightNumber": 2
     }
   ]
 }

@@ -1,11 +1,9 @@
-/* admin.css override - UPLOADS-AWARE TEST MARKER */
-body.wp-admin::before{
-  content:"MAGAZINE ADMIN OVERRIDE ACTIVE";
-  display:block;
-  margin:10px 0 14px;
-  padding:10px 12px;
-  background:#ff0033;
-  color:#fff;
-  font-weight:800;
-  border-radius:8px;
-}
+.mag-plug-admin code{display:inline-block;padding:6px 8px;background:#f6f7f7;border:1px solid #dcdcde;border-radius:6px;}
+.mag-plug-hint{padding:10px 12px;border-left:4px solid #2271b1;background:#f0f6fc;border-radius:8px;margin:10px 0;}
+.mag-plug-cards{display:flex;gap:12px;flex-wrap:wrap;margin:10px 0 16px;}
+.mag-plug-card{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:14px 16px;min-width:180px;}
+.mag-plug-card-label{font-size:12px;opacity:0.7;margin-bottom:6px;}
+.mag-plug-card-value{font-size:26px;font-weight:800;}
+.mag-plug-grid{display:grid;grid-template-columns: 1fr 1.2fr;gap:14px;align-items:start;}
+.mag-plug-panel{background:#fff;border:1px solid #dcdcde;border-radius:12px;padding:14px 16px;}
+.mag-plug-sub{margin-top:8px;}

@@ -1,33 +1,21 @@
 {
+  "schemaVersion": "1.0",
   "issue": {
     "id": "Issue_1",
     "title": "Winter 2026"
   },
   "cover": {
-    "image": "https://raw.githubusercontent.com/Joliel21/BCS_Issues/main/Issue_1/cover.png",
+    "image": "cover.png",
     "text": "Winter 2026"
   },
   "background": {
     "image": ""
   },
   "theme": {
-    "pack": "default"
-  },
-  "sound": {
-    "enabled": false,
-    "show_button": false,
-    "remember_choice_across_visits": true,
-    "default_profile": "calm",
-    "default_volume": 0.35,
-    "profiles": [
-      { "id": "calm", "label": "Calm", "url": "", "loop": true, "vol": 1, "enabled": false },
-      { "id": "classical", "label": "Classical", "url": "", "loop": true, "vol": 1, "enabled": false },
-      { "id": "jazz", "label": "Jazz", "url": "", "loop": true, "vol": 1, "enabled": false },
-      { "id": "instrumental", "label": "Instrumental", "url": "", "loop": true, "vol": 1, "enabled": false }
-    ]
-  },
-  "intro": {
-    "preset": "none"
-  },
-  "lockBehaviorVersion": true
+    "colors": {
+      "stageBackground": "#ffffff",
+      "pageBackground": "#ffffff",
+      "pageText": "#111111"
+    }
+  }
 }

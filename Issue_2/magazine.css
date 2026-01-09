@@ -583,10 +583,9 @@ body.admin-bar .mag-plug-stage {
         content: none !important;
     }
 
-    .mag-plug-spread::before,
-    .mag-plug-spread::after {
-        display: none !important;
-        content: none !important;
+    .mag-plug-object {
+        transform: rotateZ(var(--mag-tilt-z)) !important;
+        transition: transform 120ms ease !important;
     }
 
     .mag-plug-object {
@@ -778,12 +777,13 @@ body.admin-bar .mag-plug-stage {
 .mag-plug-object {
   --mag-tilt-x: 0deg !important;
   --mag-tilt-y: 0deg !important;
+  /* keep --mag-tilt-z so the knob can rotate */
   --mag-parallax-z: 0px !important;
   --mag-parallax-scale: 1 !important;
 
   --mag-bg-x: 0px !important;
   --mag-bg-y: 0px !important;
-  --mag-bg-scale: 1 !important; /* critical: removes the “depth zoom” feeling */
+  --mag-bg-scale: 1 !important;
 }
 
 /* 2) Background: force static center + no transforms (no “depth”) */
@@ -795,9 +795,9 @@ body.admin-bar .mag-plug-stage {
 
 /* 3) Book/object: remove 3D tilt + Z translation entirely */
 .mag-plug-object {
-  transform: none !important;          /* stops the book “flying” */
-  transition: none !important;
-  will-change: auto !important;
+  transform: rotateZ(var(--mag-tilt-z)) !important;  /* knob rotation */
+  transition: transform 120ms ease !important;
+  will-change: transform !important;
   transform-style: flat !important;
 }
 

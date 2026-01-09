@@ -1,22 +1,22 @@
 {
-  "schemaVersion": "1.0",
+  "schemaVersion": 1,
   "format": "bcs-magazine",
   "id": "bta_trial_issue_1",
   "title": "Breathtaking Awareness - Trial Issue 1",
+
+  "size": {
+    "standard": "A4",
+    "orientation": "portrait",
+    "units": "mm",
+    "width": 210,
+    "height": 297
+  },
+
   "pageCountHint": 48,
   "toc": [
-    {
-      "label": "Redefining Success",
-      "pageNumber": 1
-    },
-    {
-      "label": "Redefining Success (cont.)",
-      "pageNumber": 2
-    },
-    {
-      "label": "Introduction Speech",
-      "pageNumber": 3
-    }
+    { "label": "Redefining Success", "pageNumber": 1 },
+    { "label": "Redefining Success (cont.)", "pageNumber": 2 },
+    { "label": "Introduction Speech", "pageNumber": 3 }
   ],
   "pages": [
     {

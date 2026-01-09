@@ -401,7 +401,8 @@
 ui.btnClose.addEventListener("click", (e) => { e.preventDefault(); state.goCover("front"); });
 
 // prev/next: tap = 1 step, hold = repeat after delay (no runaway sensitivity)
-const HOLD_DELAY = 10000000000000000;     // ms before repeating starts
+const HOLD_DELAY = 650
+;     // ms before repeating starts
 const REPEAT_START = 170;   // initial repeat speed (ms)
 const REPEAT_MIN = 70;      // fastest repeat (ms)
 const ACCEL_EVERY = 420;    // ms between speed-ups

@@ -4,13 +4,31 @@
   "title": "BCS Magazine viewer.json",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "id", "title", "pages", "spreads"],
+  "required": ["schemaVersion", "format", "id", "title", "pages", "spreads"],
   "properties": {
     "schemaVersion": { "type": "integer", "const": 1 },
+    "format": { "type": "string", "const": "bcs-magazine" },
     "id": { "type": "string", "minLength": 1 },
     "title": { "type": "string", "minLength": 1 },
+
+    "coverImageUrl": { "type": "string" },
+    "pageCountHint": { "type": "integer", "minimum": 1 },
+
+    "size": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "standard": { "type": "string" },
+        "orientation": { "type": "string" },
+        "units": { "type": "string" },
+        "width": { "type": "number" },
+        "height": { "type": "number" }
+      }
+    },
+
     "toc": {
       "type": "array",
+      "default": [],
       "items": {
         "type": "object",
         "additionalProperties": false,
@@ -19,20 +37,22 @@
           "label": { "type": "string" },
           "pageNumber": { "type": "integer", "minimum": 1 }
         }
-      },
-      "default": []
+      }
     },
+
     "pages": {
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/page" }
     },
+
     "spreads": {
       "type": "array",
       "minItems": 1,
       "items": { "$ref": "#/$defs/spread" }
     }
   },
+
   "$defs": {
     "page": {
       "type": "object",
@@ -45,23 +65,25 @@
         "fallbackText": { "type": "string" },
         "elements": {
           "type": "array",
-          "items": { "$ref": "#/$defs/element" },
-          "default": []
+          "default": [],
+          "items": { "$ref": "#/$defs/element" }
         }
       }
     },
+
     "spread": {
       "type": "object",
       "additionalProperties": false,
       "required": ["id", "pageLeftId", "pageRightId", "pageLeftNumber", "pageRightNumber"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
-        "pageLeftId": { "type": "string" },
-        "pageRightId": { "type": "string" },
+        "pageLeftId": { "type": "string", "minLength": 1 },
+        "pageRightId": { "type": "string", "minLength": 1 },
         "pageLeftNumber": { "type": ["integer", "null"], "minimum": 1 },
         "pageRightNumber": { "type": ["integer", "null"], "minimum": 1 }
       }
     },
+
     "element": {
       "type": "object",
       "additionalProperties": false,
@@ -70,6 +92,7 @@
         "id": { "type": "string", "minLength": 1 },
         "type": { "type": "string", "enum": ["text", "image"] },
         "linkUrl": { "type": ["string", "null"] },
+
         "style": {
           "type": "object",
           "additionalProperties": true,
@@ -81,10 +104,8 @@
             "h": { "type": "number", "minimum": 0, "maximum": 1 }
           }
         },
-        "content": {
-          "type": "object",
-          "additionalProperties": true
-        }
+
+        "content": { "type": "object", "additionalProperties": true }
       },
       "allOf": [
         {

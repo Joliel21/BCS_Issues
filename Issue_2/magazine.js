@@ -398,13 +398,12 @@
     // click handlers
    // close handler (keep this as click; no repeat needed)
 
-// prev/next: tap = 1 step, hold = repeat after delay (no runaway sensitivity)
-const HOLD_DELAY = 650
-;     // ms before repeating starts
-const REPEAT_START = 170;   // initial repeat speed (ms)
-const REPEAT_MIN = 70;      // fastest repeat (ms)
-const ACCEL_EVERY = 420;    // ms between speed-ups
-const ACCEL_STEP = 18;      // ms faster each accel tick
+// prev/next: tap = 1 step, hold = repeat AFTER delay, then slowly accelerates
+const HOLD_DELAY = 900;     // wait longer before repeat starts
+const REPEAT_START = 420;   // slower starting repeat (ms)
+const REPEAT_MIN = 220;     // never faster than this (ms)
+const ACCEL_EVERY = 900;    // speed up less often (ms)
+const ACCEL_STEP = 25;      // each speed-up amount (ms)
 
 function bindHoldToRepeat(btn, stepFn) {
   let holdTimer = 0;
@@ -423,12 +422,10 @@ function bindHoldToRepeat(btn, stepFn) {
     isHeld = true;
     rate = REPEAT_START;
 
-    // first repeat tick happens immediately on hold-start
-    stepFn();
-
+    // IMPORTANT: do NOT step immediately here.
+    // The first step happens after `rate` ms, which feels much less sensitive.
     repeatTimer = setInterval(stepFn, rate);
 
-    // accelerate while holding
     accelTimer = setInterval(() => {
       rate = Math.max(REPEAT_MIN, rate - ACCEL_STEP);
       if (repeatTimer) {
@@ -442,31 +439,20 @@ function bindHoldToRepeat(btn, stepFn) {
     e.preventDefault();
     isHeld = false;
     clearAll();
-
     try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-
     holdTimer = setTimeout(startRepeat, HOLD_DELAY);
   });
 
   btn.addEventListener("pointerup", (e) => {
     e.preventDefault();
-
-    // if released before hold delay: single step
     const doSingle = !isHeld;
-
     clearAll();
-
     if (doSingle) stepFn();
   });
 
   btn.addEventListener("pointercancel", (e) => { e.preventDefault(); clearAll(); });
   btn.addEventListener("pointerleave", (e) => { e.preventDefault(); clearAll(); });
 }
-
-// IMPORTANT: remove click handlers for prev/next.
-// Pointer-up handles single-step; hold handles repeat.
-bindHoldToRepeat(ui.btnPrev, () => state.goPrev());
-bindHoldToRepeat(ui.btnNext, () => state.goNext());
 
 
     // knob menu

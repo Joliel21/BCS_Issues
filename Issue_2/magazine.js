@@ -335,7 +335,6 @@
       cover.appendChild(t);
     }
 
-    cover.addEventListener("click", (e) => { e.preventDefault(); onOpen(); });
     cover.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
     });
@@ -398,7 +397,6 @@
 
     // click handlers
    // close handler (keep this as click; no repeat needed)
-ui.btnClose.addEventListener("click", (e) => { e.preventDefault(); state.goCover("front"); });
 
 // prev/next: tap = 1 step, hold = repeat after delay (no runaway sensitivity)
 const HOLD_DELAY = 650
@@ -485,15 +483,12 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
         ui.knobBtn.setAttribute("aria-expanded", knobOpen ? "true" : "false");
       };
 
-      ui.knobBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); toggleKnob(); });
-      document.addEventListener("click", (e) => {
         if (!knobOpen) return;
         if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
         closeKnob();
       });
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
 
-      ui.knobMenu.addEventListener("click", (e) => {
         const t = e.target;
         if (!(t instanceof HTMLElement)) return;
         const act = t.getAttribute("data-action");
@@ -518,7 +513,6 @@ bindHoldToRepeat(ui.btnNext, () => state.goNext());
       };
       const closePageInput = () => ui.pageInput.classList.remove("is-open");
 
-      ui.pageJumpBtn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); openPageInput(); });
       ui.pageInput.addEventListener("keydown", (e) => {
         if (e.key === "Escape") { e.preventDefault(); closePageInput(); return; }
         if (e.key === "Enter") {

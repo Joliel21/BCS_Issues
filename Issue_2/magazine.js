@@ -1,22 +1,16 @@
 /* =====================================================================
-   MAG PLUG — RUNTIME (magazine.js) — PATCHSET v4 (WP) — NO ARROWS
-   Changes:
-   - Removes ALL on-screen prev/next arrow buttons
-   - Removes ALL code paths that reference prev/next buttons (ui.btnPrev/ui.btnNext)
-   - Page turning via:
-       * Edge tap (outer 24%) => prev/next
-       * Middle tap => next
-       * Swipe left/right => next/prev (touch + mouse)
-       * Keyboard ArrowLeft/ArrowRight (optional via cfg.enableKeyboard)
-   - Keeps: One-page view toggle, TOC button, Music button (optional)
-   - Keeps background static; re-enables *book* hover tilt via CSS vars (if not blocked by !important)
-   - Strong nav guard to prevent double-turn bursts
-
+   MAG PLUG — RUNTIME (magazine.js) — PATCHSET v5 (WP) — NO ARROWS + MOVEMENT RESTORED
+   Fixes:
+   - Removes/hides any legacy prev/next arrow buttons found in DOM (even if injected elsewhere)
+   - Page turning ONLY via: edge tap, middle tap (next), swipe, keyboard (optional)
+   - Touch swipe: uses pointer events with passive:false + touch-action:none to allow preventDefault
+   - Restores “magazine moves with mouse” by applying transforms directly to the BOOK element (not via CSS vars)
+   - Keeps background static (no parallax)
+   - Adds an under-book shadow element that moves with the book
    Notes:
-   - If your CSS hard-locks --mag-tilt-x/--mag-tilt-y or object transforms with !important,
-     hover tilt will not show until CSS is adjusted.
+   - This file is self-contained; it does not require arrow CSS removal, but we also ship a CSS patch in the ZIP
+     to hide any theme/plugin arrows that might still exist.
    ===================================================================== */
-
 (() => {
   const DEFAULT_BG_URL =
     "https://breathtakingawareness.com/wp-content/uploads/2025/12/Wood-Digital-Scrapbook-Paper-9.png";
@@ -42,13 +36,10 @@
   function baseHrefFromJsonUrl(jsonUrl) {
     try {
       const u = new URL(jsonUrl, window.location.href);
-      u.hash = "";
-      u.search = "";
+      u.hash = ""; u.search = "";
       u.pathname = u.pathname.replace(/\/[^\/?#]+$/, "/");
       return u.toString();
-    } catch (_) {
-      return "";
-    }
+    } catch (_) { return ""; }
   }
 
   function resolveUrlMaybe(baseHref, url) {
@@ -67,8 +58,7 @@
     const baseHref = baseHrefFromJsonUrl(jsonUrl);
     let manifest = null;
 
-    const manifestUrl =
-      cfg && cfg.useManifest && cfg.manifestUrl ? String(cfg.manifestUrl) : "";
+    const manifestUrl = (cfg && cfg.useManifest && cfg.manifestUrl) ? String(cfg.manifestUrl) : "";
     if (manifestUrl) {
       try { manifest = await fetchJson(manifestUrl); } catch (_) { manifest = null; }
     }
@@ -78,11 +68,8 @@
   }
 
   function makeSessionId() {
-    try {
-      return "s_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
-    } catch (_) {
-      return "s_" + Date.now();
-    }
+    try { return "s_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16); }
+    catch (_) { return "s_" + Date.now(); }
   }
 
   async function sendEvent(cfg, issueId, sessionId, event, pageIndex = null, meta = {}) {
@@ -123,8 +110,7 @@
 
     const stage = document.createElement("div");
     stage.className = "bcs-mag-stage mag-plug-stage";
-    // CRITICAL: allow swipe/tap gestures on touch devices
-    stage.style.touchAction = "none";
+    stage.style.touchAction = "none"; // crucial for swipe/tap on touch devices
 
     const bg = document.createElement("div");
     bg.className = "bcs-mag-bg mag-plug-background";
@@ -133,24 +119,29 @@
     propsLayer.className = "mag-plug-props-layer";
     propsLayer.setAttribute("aria-hidden", "true");
 
+    const shadow = document.createElement("div");
+    shadow.className = "mag-plug-book-shadow";
+    shadow.setAttribute("aria-hidden", "true");
+
     const object = document.createElement("div");
     object.className = "bcs-mag-book mag-plug-object";
+    object.setAttribute("data-mag-book", "1");
 
     stage.appendChild(bg);
     stage.appendChild(propsLayer);
+    stage.appendChild(shadow);
     stage.appendChild(object);
     wrapper.appendChild(stage);
     rootEl.appendChild(wrapper);
 
     if (cfg && cfg.stageBackground) stage.style.backgroundColor = cfg.stageBackground;
 
-    return { wrapper, stage, bg, propsLayer, object, rootEl };
+    return { wrapper, stage, bg, propsLayer, shadow, object, rootEl };
   }
 
   function buildControls(wrapper) {
     const controls = document.createElement("div");
     controls.className = "mag-plug-controls";
-
     // NO PREV/NEXT ARROWS IN THIS VERSION
     controls.innerHTML = `
       <button class="mag-plug-knob" type="button" aria-label="Rotation knob" aria-haspopup="menu" aria-expanded="false">
@@ -239,32 +230,12 @@
     };
   }
 
-  function makeTransformController(rootEl, cfg) {
-    const reduced = prefersReducedMotion(cfg);
-    let rot = 0;
-
-    function apply() {
-      rootEl.style.setProperty("--mag-tilt-z", `${rot.toFixed(2)}deg`);
-    }
-    function recenter() { rot = 0; apply(); }
-    function rotateBy(deg) { rot = (rot + deg) % 360; apply(); }
-
-    if (reduced) recenter();
-    return { recenter, rotateBy };
-  }
-
   function applyManifestTheme(shell, rootEl, cfg, manifest, baseHref) {
-    const bgFromManifest =
-      manifest && manifest.background
-        ? (manifest.background.image || manifest.background.imageUrl || "")
-        : "";
-    const bgUrl = resolveUrlMaybe(
-      baseHref,
-      bgFromManifest || (cfg && cfg.backgroundUrl) || DEFAULT_BG_URL
-    );
+    const bgFromManifest = manifest && manifest.background ? (manifest.background.image || manifest.background.imageUrl || "") : "";
+    const bgUrl = resolveUrlMaybe(baseHref, bgFromManifest || (cfg && cfg.backgroundUrl) || DEFAULT_BG_URL);
     shell.bg.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : "none";
 
-    // Hard lock background motion
+    // background must never move
     rootEl.style.setProperty("--mag-bg-x", "0px");
     rootEl.style.setProperty("--mag-bg-y", "0px");
     rootEl.style.setProperty("--mag-bg-scale", "1.0");
@@ -284,22 +255,20 @@
 
   function normalizeSpreads(viewer, byId) {
     const spreads = Array.isArray(viewer?.spreads) ? viewer.spreads : [];
-    return spreads
-      .map((s, si) => {
-        const leftRef = byId.get(s.pageLeftId);
-        const rightRef = byId.get(s.pageRightId);
-        return {
-          spreadIndex: si,
-          id: s.id || `spread_${si}`,
-          left: leftRef ? leftRef.page : null,
-          right: rightRef ? rightRef.page : null,
-          leftIdx: leftRef ? leftRef.idx : null,
-          rightIdx: rightRef ? rightRef.idx : null,
-          pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
-          pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
-        };
-      })
-      .filter((s) => s.left || s.right);
+    return spreads.map((s, si) => {
+      const leftRef = byId.get(s.pageLeftId);
+      const rightRef = byId.get(s.pageRightId);
+      return {
+        spreadIndex: si,
+        id: s.id || `spread_${si}`,
+        left: leftRef ? leftRef.page : null,
+        right: rightRef ? rightRef.page : null,
+        leftIdx: leftRef ? leftRef.idx : null,
+        rightIdx: rightRef ? rightRef.idx : null,
+        pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
+        pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
+      };
+    }).filter(s => s.left || s.right);
   }
 
   function elementToDom(node, baseHref) {
@@ -308,7 +277,6 @@
 
     const st = node && node.style && typeof node.style === "object" ? node.style : {};
     const x = getNum(st.x, 0), y = getNum(st.y, 0), w = getNum(st.w, 0), h = getNum(st.h, 0);
-
     el.style.left = x * 100 + "%";
     el.style.top = y * 100 + "%";
     el.style.width = w * 100 + "%";
@@ -363,7 +331,7 @@
     if (direct) return direct;
 
     try {
-      const pages = viewer && Array.isArray(viewer.pages) ? viewer.pages : [];
+      const pages = (viewer && Array.isArray(viewer.pages)) ? viewer.pages : [];
       for (let i = pages.length - 1; i >= 0; i--) {
         const p = pages[i];
         const els = p && Array.isArray(p.elements) ? p.elements : [];
@@ -409,15 +377,13 @@
       cover.appendChild(t);
     }
 
-    // Open on Enter/Space
     cover.addEventListener("keydown", (e) => {
       if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
     }, true);
 
-    // Open on tap/click (single path: pointerup only)
+    // Single activation path: pointerup only (prevents click+pointer duplication)
     cover.addEventListener("pointerup", (e) => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       onOpen();
     }, true);
 
@@ -484,18 +450,15 @@
     try { e.stopImmediatePropagation(); } catch (_) {}
   }
 
-  function attachNav(ui, state, transform, audioCtl) {
+  function attachControls(ui, state, transform, audioCtl) {
     if (!ui || !state || !transform) return;
     if (!ui.btnClose) return;
 
     // Close
     ui.btnClose.addEventListener("pointerdown", swallowAll, true);
-    ui.btnClose.addEventListener("click", (e) => {
-      swallowAll(e);
-      state.goCover("front");
-    }, true);
+    ui.btnClose.addEventListener("click", (e) => { swallowAll(e); state.goCover("front"); }, true);
 
-    // knob menu
+    // knob menu (rotation affects book transform)
     if (ui.knobBtn && ui.knobMenu) {
       let knobOpen = false;
       const closeKnob = () => {
@@ -510,17 +473,13 @@
       };
 
       ui.knobBtn.addEventListener("pointerdown", swallowAll, true);
-      ui.knobBtn.addEventListener("click", (e) => {
-        swallowAll(e);
-        toggleKnob();
-      }, true);
+      ui.knobBtn.addEventListener("click", (e) => { swallowAll(e); toggleKnob(); }, true);
 
       document.addEventListener("pointerdown", (e) => {
         if (!knobOpen) return;
         if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
         closeKnob();
       }, true);
-
       document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
 
       ui.knobMenu.addEventListener("click", (e) => {
@@ -542,10 +501,7 @@
     // One-page view toggle
     if (ui.viewBtn) {
       ui.viewBtn.addEventListener("pointerdown", swallowAll, true);
-      ui.viewBtn.addEventListener("click", (e) => {
-        swallowAll(e);
-        state.toggleViewMode();
-      }, true);
+      ui.viewBtn.addEventListener("click", (e) => { swallowAll(e); state.toggleViewMode(); }, true);
     }
 
     // TOC
@@ -565,9 +521,7 @@
       ui.tocClose.addEventListener("pointerdown", swallowAll, true);
       ui.tocClose.addEventListener("click", (e) => { swallowAll(e); closeToc(); }, true);
 
-      ui.tocPanel.addEventListener("click", (e) => {
-        if (e.target === ui.tocPanel) closeToc();
-      }, true);
+      ui.tocPanel.addEventListener("click", (e) => { if (e.target === ui.tocPanel) closeToc(); }, true);
 
       document.addEventListener("keydown", (e) => {
         if (ui.tocPanel.style.display !== "flex") return;
@@ -647,22 +601,47 @@
     });
   }
 
-  // Gentle hover tilt (book only), background remains locked
-  function attachHoverTilt(shell, cfg, rootEl) {
+  function makeBookTransformController(shell, cfg) {
+    const reduced = prefersReducedMotion(cfg);
+
+    let rotZ = 0;
+    let tiltX = 0;
+    let tiltY = 0;
+
+    const apply = () => {
+      // Apply to BOOK + SHADOW (so they move together)
+      const t = `translate3d(0,0,0) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg) rotateZ(${rotZ.toFixed(2)}deg)`;
+      shell.object.style.transform = t;
+      shell.shadow.style.transform = t;
+    };
+
+    const recenter = () => {
+      rotZ = 0;
+      apply();
+    };
+
+    const rotateBy = (deg) => {
+      rotZ = (rotZ + deg) % 360;
+      apply();
+    };
+
+    const setTilt = (xDeg, yDeg) => {
+      if (reduced) { tiltX = 0; tiltY = 0; apply(); return; }
+      tiltX = clamp(xDeg, -6, 6);
+      tiltY = clamp(yDeg, -8, 8);
+      apply();
+    };
+
+    recenter();
+    return { recenter, rotateBy, setTilt };
+  }
+
+  function attachHoverTilt(shell, cfg, transform) {
     if (prefersReducedMotion(cfg)) return () => {};
     const stageEl = shell.stage;
-    const root = rootEl || stageEl.closest(".mag-plug") || document.documentElement;
 
     let raf = 0;
     let tx = 0, ty = 0;
-
-    function apply() {
-      raf = 0;
-      root.style.setProperty("--mag-tilt-x", `${ty.toFixed(2)}deg`);
-      root.style.setProperty("--mag-tilt-y", `${tx.toFixed(2)}deg`);
-      root.style.setProperty("--mag-bg-x", "0px");
-      root.style.setProperty("--mag-bg-y", "0px");
-    }
 
     function onMove(clientX, clientY) {
       const r = stageEl.getBoundingClientRect();
@@ -671,14 +650,19 @@
       const cx = clamp(nx, -1, 1);
       const cy = clamp(ny, -1, 1);
 
-      tx = cx * 4;   // rotateY
-      ty = -cy * 3;  // rotateX
-      if (!raf) raf = requestAnimationFrame(apply);
+      // gentle movement
+      tx = cx * 5;     // rotateY
+      ty = -cy * 3.5;  // rotateX
+
+      if (!raf) raf = requestAnimationFrame(() => {
+        raf = 0;
+        transform.setTilt(ty, tx);
+      });
     }
 
     function reset() {
       tx = 0; ty = 0;
-      if (!raf) raf = requestAnimationFrame(apply);
+      transform.setTilt(0, 0);
     }
 
     const onPointerMove = (e) => onMove(e.clientX, e.clientY);
@@ -693,14 +677,14 @@
     };
   }
 
-  // Pointer-only gestures (works for touch + mouse)
+  // Pointer-only gestures with passive:false so preventDefault works on touch browsers
   function attachGestures(shell, state) {
     const stage = shell.stage;
     const objectEl = shell.object;
 
-    const EDGE = 0.24;        // larger edge area
-    const SWIPE_MIN_PX = 28;  // easier swipe
-    const SWIPE_MAX_Y_PX = 110;
+    const EDGE = 0.30;        // larger edge zone per request
+    const SWIPE_MIN_PX = 22;  // easier swipe
+    const SWIPE_MAX_Y_PX = 130;
 
     let down = false;
     let sx = 0, sy = 0, st = 0;
@@ -718,6 +702,8 @@
       st = Date.now();
 
       try { stage.setPointerCapture(pid); } catch (_) {}
+      // prevent scroll/zoom gesture stealing
+      try { e.preventDefault(); } catch (_) {}
     };
 
     const onUp = (e) => {
@@ -738,7 +724,7 @@
       }
 
       // Tap
-      if (elapsed < 380 && adx < 10 && ady < 10) {
+      if (elapsed < 420 && adx < 10 && ady < 10) {
         const r = objectEl.getBoundingClientRect();
         const nx = (e.clientX - r.left) / Math.max(1, r.width);
 
@@ -756,7 +742,7 @@
 
     const onCancel = () => { down = false; };
 
-    stage.addEventListener("pointerdown", onDown, { passive: true });
+    stage.addEventListener("pointerdown", onDown, { passive: false });
     stage.addEventListener("pointerup", onUp, { passive: true });
     stage.addEventListener("pointercancel", onCancel, { passive: true });
 
@@ -767,21 +753,34 @@
     };
   }
 
+  function removeLegacyArrows(rootEl) {
+    // If some other runtime/plugin injects arrow buttons, remove/hide them so user never sees them.
+    const legacy = qa(".mag-plug-prev, .mag-plug-next, .bcs-mag-prev, .bcs-mag-next, .turn-prev, .turn-next", rootEl);
+    legacy.forEach((el) => {
+      try { el.remove(); } catch (_) { try { el.style.display = "none"; } catch (_) {} }
+    });
+
+    // Also hide via injected style (belt + suspenders)
+    if (!q("#mag-plug-hide-arrows-style")) {
+      const st = document.createElement("style");
+      st.id = "mag-plug-hide-arrows-style";
+      st.textContent = `
+        .mag-plug-prev,.mag-plug-next,.bcs-mag-prev,.bcs-mag-next,.turn-prev,.turn-next{display:none!important;}
+      `;
+      document.head.appendChild(st);
+    }
+  }
+
   function getRoots() {
-    return qa(".bcs-mag, .mag-plug").filter(el =>
-      el instanceof HTMLElement && el.getAttribute("data-json-url")
-    );
+    return qa(".bcs-mag, .mag-plug").filter(el => el instanceof HTMLElement && el.getAttribute("data-json-url"));
   }
 
   function makeAudioController(cfg, manifest, baseHref) {
     const urlFromCfg = cfg && cfg.musicUrl ? String(cfg.musicUrl) : "";
-    const urlFromManifest =
-      manifest && manifest.music ? String(manifest.music.url || manifest.music.src || "") : "";
+    const urlFromManifest = manifest && manifest.music ? String(manifest.music.url || manifest.music.src || "") : "";
     const musicUrl = resolveUrlMaybe(baseHref, urlFromCfg || urlFromManifest || "");
 
-    if (!musicUrl) {
-      return { has: false, toggle: () => {}, setVolume: () => {} };
-    }
+    if (!musicUrl) return { has: false, toggle: () => {}, setVolume: () => {} };
 
     const a = new Audio();
     a.src = musicUrl;
@@ -803,6 +802,8 @@
   }
 
   async function bootOne(rootEl) {
+    removeLegacyArrows(rootEl);
+
     const cfg = parseConfig(rootEl);
     const jsonUrl = rootEl.getAttribute("data-json-url") || "";
     const issueId = String(cfg.issueId || "issue");
@@ -815,7 +816,6 @@
     shell.wrapper.setAttribute("role", "region");
     shell.wrapper.setAttribute("aria-label", "Magazine reader");
 
-    const transform = makeTransformController(rootEl, cfg);
     setLabel(ui, "Loading…", false);
 
     let viewer = null, manifest = null, baseHref = "";
@@ -833,30 +833,20 @@
 
     const { byId } = indexPagesById(viewer);
     const spreads = normalizeSpreads(viewer, byId);
-
-    if (!spreads.length) {
-      setLabel(ui, "No spreads", true);
-      return;
-    }
+    if (!spreads.length) { setLabel(ui, "No spreads", true); return; }
 
     const coverInfo = getCoverFromSources(cfg, viewer, manifest, baseHref);
     const coverFront = coverInfo.coverFront || "";
     const coverBack = getBackCoverFromViewer(viewer, baseHref, coverFront);
     const coverText = coverInfo.coverText || "";
 
-    rootEl.style.setProperty("--mag-cover-front", coverFront ? `url("${coverFront}")` : "none");
-
-    // build TOC list (best-effort)
+    // TOC list
     if (ui.tocList) {
       const items = [];
       const tocFromManifest = manifest && Array.isArray(manifest.toc) ? manifest.toc : null;
-
       if (tocFromManifest && tocFromManifest.length) {
         tocFromManifest.forEach((it) => {
-          items.push({
-            label: String(it.title || it.label || "Section"),
-            page: Number(it.page || it.pageNumber || 1),
-          });
+          items.push({ label: String(it.title || it.label || "Section"), page: Number(it.page || it.pageNumber || 1) });
         });
       } else {
         spreads.forEach((sp, i) => {
@@ -865,18 +855,13 @@
           items.push({ label: `Pages ${a}–${b}`, page: Number(a) });
         });
       }
-
-      ui.tocList.innerHTML = items
-        .map((it) => `
-          <button type="button"
-            class="mag-plug-toc-item"
-            data-page="${it.page}"
-            style="width:100%; text-align:left; padding:10px 10px; margin:0; border:0;
-                   background:transparent; color:#fff; cursor:pointer; border-radius:10px;">
-            ${it.label}
-          </button>
-        `)
-        .join("");
+      ui.tocList.innerHTML = items.map((it) => `
+        <button type="button" class="mag-plug-toc-item" data-page="${it.page}"
+          style="width:100%; text-align:left; padding:10px 10px; margin:0; border:0;
+                 background:transparent; color:#fff; cursor:pointer; border-radius:10px;">
+          ${it.label}
+        </button>
+      `).join("");
 
       ui.tocList.addEventListener("click", (e) => {
         const t = e.target;
@@ -890,6 +875,8 @@
     }
 
     const audioCtl = makeAudioController(cfg, manifest, baseHref);
+    const transform = makeBookTransformController(shell, cfg);
+    attachHoverTilt(shell, cfg, transform);
 
     // NAV GUARD: prevents rapid double turns from a single interaction
     const NAV_GUARD_MS = 520;
@@ -901,7 +888,6 @@
       spreadIndex: 0,
       hasOpenedOnce: false,
       spreads,
-
       viewMode: "spread",   // "spread" | "single"
       singleSide: "right",  // "left" | "right"
 
@@ -969,23 +955,14 @@
       render: (announce) => {
         const s = spreads[state.spreadIndex];
 
-        renderSpread(
-          shell.object,
-          s.left || null,
-          s.right || null,
-          baseHref,
-          state.viewMode,
-          state.singleSide
-        );
+        renderSpread(shell.object, s.left || null, s.right || null, baseHref, state.viewMode, state.singleSide);
 
         const pnL = s.pageLeftNumber;
         const pnR = s.pageRightNumber;
 
         let label = `Spread ${state.spreadIndex + 1} / ${spreads.length}`;
         if (state.viewMode === "single") {
-          const one = state.singleSide === "right"
-            ? (pnR || (state.spreadIndex * 2 + 2))
-            : (pnL || (state.spreadIndex * 2 + 1));
+          const one = state.singleSide === "right" ? (pnR || (state.spreadIndex * 2 + 2)) : (pnL || (state.spreadIndex * 2 + 1));
           label = `Page ${one}`;
         } else if (pnL || pnR) {
           const a = pnL ? String(pnL) : "—";
@@ -1001,11 +978,7 @@
             ? (state.singleSide === "right" ? s.rightIdx : s.leftIdx)
             : (s.leftIdx !== null && s.leftIdx !== undefined ? s.leftIdx : null);
 
-        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, {
-          spread: state.viewMode !== "single",
-          spread_id: s.id,
-          view: state.viewMode,
-        });
+        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, { spread: state.viewMode !== "single", spread_id: s.id, view: state.viewMode });
       },
 
       goPrev: (force = false) => {
@@ -1019,11 +992,7 @@
         }
 
         if (state.viewMode === "single") {
-          if (state.singleSide === "right") {
-            state.singleSide = "left";
-            state.render(true);
-            return;
-          }
+          if (state.singleSide === "right") { state.singleSide = "left"; state.render(true); return; }
           if (state.spreadIndex <= 0) { state.goCover("front"); return; }
           state.spreadIndex = clamp(state.spreadIndex - 1, 0, spreads.length - 1);
           state.singleSide = "right";
@@ -1047,11 +1016,7 @@
         }
 
         if (state.viewMode === "single") {
-          if (state.singleSide === "left") {
-            state.singleSide = "right";
-            state.render(true);
-            return;
-          }
+          if (state.singleSide === "left") { state.singleSide = "right"; state.render(true); return; }
           if (state.spreadIndex >= spreads.length - 1) { state.goCover("back"); return; }
           state.spreadIndex = clamp(state.spreadIndex + 1, 0, spreads.length - 1);
           state.singleSide = "left";
@@ -1065,17 +1030,11 @@
       },
     };
 
-    // Controls (no arrows)
-    attachNav(ui, state, transform, audioCtl);
+    attachControls(ui, state, transform, audioCtl);
     attachKeyboard(shell.wrapper, cfg, state);
-
-    // Touch + swipe gestures
     attachGestures(shell, state);
 
-    // Hover tilt (if CSS allows)
-    attachHoverTilt(shell, cfg, rootEl);
-
-    // Start on front cover (true closed-cover state)
+    // Start on front cover
     state.goCover("front");
   }
 

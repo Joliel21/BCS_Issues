@@ -1,15 +1,20 @@
 /* =====================================================================
-   MAG PLUG — RUNTIME (magazine.js) — PATCHSET v3 (WP)
-   Fixes in this version:
-   - STOP double-turns on arrow click (strong capture + click suppression)
-   - Touch swipe turns pages (pointer events + touch-action none)
-   - Larger edge-tap zone for page turning
-   - Slower, more controllable arrow hold-to-repeat
-   - Adds: One-page view toggle, TOC button, Music button (optional)
-   - Keeps background static; re-enables *book* hover tilt (small) when CSS allows
-   - Removes any "Every breath" label by not injecting any extra live badge text
+   MAG PLUG — RUNTIME (magazine.js) — PATCHSET v4 (WP) — NO ARROWS
+   Changes:
+   - Removes ALL on-screen prev/next arrow buttons
+   - Removes ALL code paths that reference prev/next buttons (ui.btnPrev/ui.btnNext)
+   - Page turning via:
+       * Edge tap (outer 24%) => prev/next
+       * Middle tap => next
+       * Swipe left/right => next/prev (touch + mouse)
+       * Keyboard ArrowLeft/ArrowRight (optional via cfg.enableKeyboard)
+   - Keeps: One-page view toggle, TOC button, Music button (optional)
+   - Keeps background static; re-enables *book* hover tilt via CSS vars (if not blocked by !important)
+   - Strong nav guard to prevent double-turn bursts
+
    Notes:
-   - If your CSS "LOCK PATCH" sets transforms/vars with !important, hover tilt may be blocked.
+   - If your CSS hard-locks --mag-tilt-x/--mag-tilt-y or object transforms with !important,
+     hover tilt will not show until CSS is adjusted.
    ===================================================================== */
 
 (() => {
@@ -25,19 +30,13 @@
   };
 
   function parseConfig(el) {
-    try {
-      return JSON.parse(el.getAttribute("data-config") || "{}");
-    } catch (_) {
-      return {};
-    }
+    try { return JSON.parse(el.getAttribute("data-config") || "{}"); }
+    catch (_) { return {}; }
   }
 
   function prefersReducedMotion(cfg) {
     if (cfg && cfg.respectReducedMotion === false) return false;
-    return !!(
-      window.matchMedia &&
-      window.matchMedia("(prefers-reduced-motion: reduce)").matches
-    );
+    return !!(window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   }
 
   function baseHrefFromJsonUrl(jsonUrl) {
@@ -54,11 +53,8 @@
 
   function resolveUrlMaybe(baseHref, url) {
     if (!url) return "";
-    try {
-      return new URL(url, baseHref || window.location.href).toString();
-    } catch (_) {
-      return url;
-    }
+    try { return new URL(url, baseHref || window.location.href).toString(); }
+    catch (_) { return url; }
   }
 
   async function fetchJson(url) {
@@ -74,11 +70,7 @@
     const manifestUrl =
       cfg && cfg.useManifest && cfg.manifestUrl ? String(cfg.manifestUrl) : "";
     if (manifestUrl) {
-      try {
-        manifest = await fetchJson(manifestUrl);
-      } catch (_) {
-        manifest = null;
-      }
+      try { manifest = await fetchJson(manifestUrl); } catch (_) { manifest = null; }
     }
 
     const viewer = await fetchJson(jsonUrl);
@@ -87,12 +79,7 @@
 
   function makeSessionId() {
     try {
-      return (
-        "s_" +
-        Math.random().toString(16).slice(2) +
-        "_" +
-        Date.now().toString(16)
-      );
+      return "s_" + Math.random().toString(16).slice(2) + "_" + Date.now().toString(16);
     } catch (_) {
       return "s_" + Date.now();
     }
@@ -136,7 +123,7 @@
 
     const stage = document.createElement("div");
     stage.className = "bcs-mag-stage mag-plug-stage";
-    // CRITICAL: enable touch/pointer gestures on mobile
+    // CRITICAL: allow swipe/tap gestures on touch devices
     stage.style.touchAction = "none";
 
     const bg = document.createElement("div");
@@ -163,9 +150,9 @@
   function buildControls(wrapper) {
     const controls = document.createElement("div");
     controls.className = "mag-plug-controls";
-    controls.innerHTML = `
-      <button class="mag-plug-btn mag-plug-prev" type="button" aria-label="Previous">‹</button>
 
+    // NO PREV/NEXT ARROWS IN THIS VERSION
+    controls.innerHTML = `
       <button class="mag-plug-knob" type="button" aria-label="Rotation knob" aria-haspopup="menu" aria-expanded="false">
         <span class="mag-plug-knob-ind" aria-hidden="true"></span>
       </button>
@@ -195,7 +182,6 @@
              aria-label="Type a page number and press Enter" />
 
       <button class="mag-plug-btn mag-plug-close" type="button" aria-label="Close magazine">✕</button>
-      <button class="mag-plug-btn mag-plug-next" type="button" aria-label="Next">›</button>
     `;
     wrapper.appendChild(controls);
 
@@ -232,18 +218,22 @@
     return {
       controls,
       live,
+
       tocPanel: toc,
       tocList: q(".mag-plug-toc-list", toc),
       tocClose: q(".mag-plug-toc-close", toc),
-      btnPrev: q(".mag-plug-prev", controls),
-      btnNext: q(".mag-plug-next", controls),
+
       btnClose: q(".mag-plug-close", controls),
+
       knobBtn: q(".mag-plug-knob", controls),
       knobMenu: q(".mag-plug-knob-menu", controls),
+
       viewBtn: q(".mag-plug-view", controls),
       tocBtn: q(".mag-plug-toc", controls),
+
       soundBtn: q(".mag-plug-sound-btn", controls),
       soundMenu: q(".mag-plug-sound-menu", controls),
+
       pageJumpBtn: q(".mag-plug-pagejump", controls),
       pageInput: q(".mag-plug-pageinput", controls),
     };
@@ -256,14 +246,8 @@
     function apply() {
       rootEl.style.setProperty("--mag-tilt-z", `${rot.toFixed(2)}deg`);
     }
-    function recenter() {
-      rot = 0;
-      apply();
-    }
-    function rotateBy(deg) {
-      rot = (rot + deg) % 360;
-      apply();
-    }
+    function recenter() { rot = 0; apply(); }
+    function rotateBy(deg) { rot = (rot + deg) % 360; apply(); }
 
     if (reduced) recenter();
     return { recenter, rotateBy };
@@ -272,7 +256,7 @@
   function applyManifestTheme(shell, rootEl, cfg, manifest, baseHref) {
     const bgFromManifest =
       manifest && manifest.background
-        ? manifest.background.image || manifest.background.imageUrl || ""
+        ? (manifest.background.image || manifest.background.imageUrl || "")
         : "";
     const bgUrl = resolveUrlMaybe(
       baseHref,
@@ -280,7 +264,7 @@
     );
     shell.bg.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : "none";
 
-    // Hard lock background motion: always centered
+    // Hard lock background motion
     rootEl.style.setProperty("--mag-bg-x", "0px");
     rootEl.style.setProperty("--mag-bg-y", "0px");
     rootEl.style.setProperty("--mag-bg-scale", "1.0");
@@ -312,8 +296,7 @@
           leftIdx: leftRef ? leftRef.idx : null,
           rightIdx: rightRef ? rightRef.idx : null,
           pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
-          pageRightNumber:
-            s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
+          pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
         };
       })
       .filter((s) => s.left || s.right);
@@ -324,10 +307,7 @@
     el.className = "mag-plug-el";
 
     const st = node && node.style && typeof node.style === "object" ? node.style : {};
-    const x = getNum(st.x, 0),
-      y = getNum(st.y, 0),
-      w = getNum(st.w, 0),
-      h = getNum(st.h, 0);
+    const x = getNum(st.x, 0), y = getNum(st.y, 0), w = getNum(st.w, 0), h = getNum(st.h, 0);
 
     el.style.left = x * 100 + "%";
     el.style.top = y * 100 + "%";
@@ -362,38 +342,23 @@
       a.rel = "noopener";
       a.style.position = "absolute";
       a.style.inset = "0";
-      a.setAttribute(
-        "aria-label",
-        String((node.content && node.content.ariaLabel) || "Open link")
-      );
+      a.setAttribute("aria-label", String((node.content && node.content.ariaLabel) || "Open link"));
       el.appendChild(a);
     }
     return el;
   }
 
   function getCoverFromSources(cfg, viewer, manifest, baseHref) {
-    const mCover =
-      manifest && manifest.cover
-        ? manifest.cover.image || manifest.cover.imageUrl || ""
-        : "";
+    const mCover = manifest && manifest.cover ? (manifest.cover.image || manifest.cover.imageUrl || "") : "";
     const cfgCover = cfg && cfg.coverImageUrl ? cfg.coverImageUrl : "";
     const vCover = viewer && (viewer.coverImageUrl || viewer.cover_image_url || "");
     const coverFront = resolveUrlMaybe(baseHref, mCover || cfgCover || vCover || "");
-    const coverText = String(
-      (cfg && cfg.coverText) ||
-        (manifest && manifest.cover ? manifest.cover.text || "" : "") ||
-        ""
-    ).trim();
+    const coverText = String((cfg && cfg.coverText) || (manifest && manifest.cover ? (manifest.cover.text || "") : "") || "").trim();
     return { coverFront, coverText };
   }
 
   function getBackCoverFromViewer(viewer, baseHref, fallbackFront) {
-    const vBack =
-      viewer &&
-      (viewer.backCoverImageUrl ||
-        viewer.back_cover_image_url ||
-        viewer.backCoverUrl ||
-        "");
+    const vBack = viewer && (viewer.backCoverImageUrl || viewer.back_cover_image_url || viewer.backCoverUrl || "");
     const direct = resolveUrlMaybe(baseHref, String(vBack || ""));
     if (direct) return direct;
 
@@ -402,14 +367,8 @@
       for (let i = pages.length - 1; i >= 0; i--) {
         const p = pages[i];
         const els = p && Array.isArray(p.elements) ? p.elements : [];
-        const img = els.find(
-          (e) => e && e.type === "image" && e.content && e.content.imageUrl
-        );
-        if (img)
-          return (
-            resolveUrlMaybe(baseHref, String(img.content.imageUrl || "")) ||
-            fallbackFront
-          );
+        const img = els.find(e => e && e.type === "image" && e.content && e.content.imageUrl);
+        if (img) return resolveUrlMaybe(baseHref, String(img.content.imageUrl || "")) || fallbackFront;
       }
     } catch (_) {}
     return fallbackFront || "";
@@ -418,7 +377,7 @@
   function renderCover(objectEl, coverFrontUrl, coverBackUrl, coverText, startSide, onOpen) {
     objectEl.innerHTML = "";
 
-    const side = startSide === "back" ? "back" : "front";
+    const side = (startSide === "back") ? "back" : "front";
 
     const cover = document.createElement("button");
     cover.type = "button";
@@ -450,32 +409,20 @@
       cover.appendChild(t);
     }
 
-    cover.addEventListener(
-      "keydown",
-      (e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onOpen();
-        }
-      },
-      true
-    );
+    // Open on Enter/Space
+    cover.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
+    }, true);
 
-    cover.addEventListener(
-      "pointerup",
-      (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        // open on tap
-        onOpen();
-      },
-      true
-    );
+    // Open on tap/click (single path: pointerup only)
+    cover.addEventListener("pointerup", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      onOpen();
+    }, true);
 
     objectEl.appendChild(cover);
-    try {
-      cover.focus({ preventScroll: true });
-    } catch (_) {}
+    try { cover.focus({ preventScroll: true }); } catch (_) {}
   }
 
   function renderSpread(objectEl, leftPage, rightPage, baseHref, viewMode, singleSide) {
@@ -531,7 +478,6 @@
     if (announce && ui.live) ui.live.textContent = String(text || "");
   }
 
-  // Strong suppression helper: prevents “double turn” due to click+pointerup or other handlers
   function swallowAll(e) {
     try { e.preventDefault(); } catch (_) {}
     try { e.stopPropagation(); } catch (_) {}
@@ -540,96 +486,14 @@
 
   function attachNav(ui, state, transform, audioCtl) {
     if (!ui || !state || !transform) return;
-    if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
-
-    // Replace prev/next nodes to nuke any previously bound handlers
-    {
-      const prevClone = ui.btnPrev.cloneNode(true);
-      ui.btnPrev.replaceWith(prevClone);
-      ui.btnPrev = prevClone;
-
-      const nextClone = ui.btnNext.cloneNode(true);
-      ui.btnNext.replaceWith(nextClone);
-      ui.btnNext = nextClone;
-    }
+    if (!ui.btnClose) return;
 
     // Close
     ui.btnClose.addEventListener("pointerdown", swallowAll, true);
-    ui.btnClose.addEventListener(
-      "click",
-      (e) => {
-        swallowAll(e);
-        state.goCover("front");
-      },
-      true
-    );
-
-    // Slower hold-to-repeat (users complained it is too fast)
-    const HOLD_DELAY = 700;     // ms before repeating starts
-    const REPEAT_START = 650;   // initial repeat (ms)
-    const REPEAT_MIN = 360;     // fastest repeat (ms)
-    const ACCEL_EVERY = 1100;   // ms between speed-ups
-    const ACCEL_STEP = 35;      // ms faster each accel tick
-
-    function bindHoldToRepeat(btn, stepFn) {
-      let holdTimer = 0;
-      let repeatTimer = 0;
-      let accelTimer = 0;
-      let isHeld = false;
-      let rate = REPEAT_START;
-      let ignoreClickUntil = 0;
-
-      const clearAll = () => {
-        if (holdTimer) { clearTimeout(holdTimer); holdTimer = 0; }
-        if (repeatTimer) { clearInterval(repeatTimer); repeatTimer = 0; }
-        if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
-      };
-
-      const startRepeat = () => {
-        isHeld = true;
-        rate = REPEAT_START;
-        repeatTimer = setInterval(() => stepFn(true), rate);
-
-        accelTimer = setInterval(() => {
-          rate = Math.max(REPEAT_MIN, rate - ACCEL_STEP);
-          if (repeatTimer) {
-            clearInterval(repeatTimer);
-            repeatTimer = setInterval(() => stepFn(true), rate);
-          }
-        }, ACCEL_EVERY);
-      };
-
-      // CAPTURE everything
-      btn.addEventListener("pointerdown", (e) => {
-        swallowAll(e);
-        isHeld = false;
-        clearAll();
-        ignoreClickUntil = Date.now() + 650;
-        try { btn.setPointerCapture(e.pointerId); } catch (_) {}
-        holdTimer = setTimeout(startRepeat, HOLD_DELAY);
-      }, true);
-
-      btn.addEventListener("pointerup", (e) => {
-        swallowAll(e);
-        const doSingle = !isHeld;
-        clearAll();
-        // prevent the subsequent click event from stepping again
-        ignoreClickUntil = Date.now() + 650;
-        if (doSingle) stepFn(false);
-      }, true);
-
-      btn.addEventListener("pointercancel", (e) => { swallowAll(e); clearAll(); }, true);
-      btn.addEventListener("pointerleave", (e) => { swallowAll(e); clearAll(); }, true);
-
-      // Click suppression (some browsers fire click after pointerup)
-      btn.addEventListener("click", (e) => {
-        swallowAll(e);
-        if (Date.now() < ignoreClickUntil) return;
-      }, true);
-    }
-
-    bindHoldToRepeat(ui.btnPrev, (force) => state.goPrev(force));
-    bindHoldToRepeat(ui.btnNext, (force) => state.goNext(force));
+    ui.btnClose.addEventListener("click", (e) => {
+      swallowAll(e);
+      state.goCover("front");
+    }, true);
 
     // knob menu
     if (ui.knobBtn && ui.knobMenu) {
@@ -646,46 +510,33 @@
       };
 
       ui.knobBtn.addEventListener("pointerdown", swallowAll, true);
-      ui.knobBtn.addEventListener(
-        "click",
-        (e) => {
-          swallowAll(e);
-          toggleKnob();
-        },
-        true
-      );
+      ui.knobBtn.addEventListener("click", (e) => {
+        swallowAll(e);
+        toggleKnob();
+      }, true);
 
-      document.addEventListener(
-        "pointerdown",
-        (e) => {
-          if (!knobOpen) return;
-          if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
-          closeKnob();
-        },
-        true
-      );
-      document.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") closeKnob();
-      });
+      document.addEventListener("pointerdown", (e) => {
+        if (!knobOpen) return;
+        if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
+        closeKnob();
+      }, true);
 
-      ui.knobMenu.addEventListener(
-        "click",
-        (e) => {
-          const t = e.target;
-          if (!(t instanceof HTMLElement)) return;
-          const act = t.getAttribute("data-action");
-          if (!act) return;
-          swallowAll(e);
-          closeKnob();
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
 
-          if (act === "center") { transform.recenter(); return; }
-          if (act === "rot-45") transform.rotateBy(-45);
-          if (act === "rot+45") transform.rotateBy(45);
-          if (act === "rot-90") transform.rotateBy(-90);
-          if (act === "rot+90") transform.rotateBy(90);
-        },
-        true
-      );
+      ui.knobMenu.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        const act = t.getAttribute("data-action");
+        if (!act) return;
+        swallowAll(e);
+        closeKnob();
+
+        if (act === "center") { transform.recenter(); return; }
+        if (act === "rot-45") transform.rotateBy(-45);
+        if (act === "rot+45") transform.rotateBy(45);
+        if (act === "rot-90") transform.rotateBy(-90);
+        if (act === "rot+90") transform.rotateBy(90);
+      }, true);
     }
 
     // One-page view toggle
@@ -710,8 +561,10 @@
 
       ui.tocBtn.addEventListener("pointerdown", swallowAll, true);
       ui.tocBtn.addEventListener("click", (e) => { swallowAll(e); openToc(); }, true);
+
       ui.tocClose.addEventListener("pointerdown", swallowAll, true);
       ui.tocClose.addEventListener("click", (e) => { swallowAll(e); closeToc(); }, true);
+
       ui.tocPanel.addEventListener("click", (e) => {
         if (e.target === ui.tocPanel) closeToc();
       }, true);
@@ -760,28 +613,17 @@
     // page jump
     if (ui.pageJumpBtn && ui.pageInput) {
       ui.pageJumpBtn.addEventListener("pointerdown", swallowAll, true);
-      ui.pageJumpBtn.addEventListener(
-        "click",
-        (e) => {
-          swallowAll(e);
-          ui.pageInput.value = "";
-          ui.pageInput.classList.add("is-open");
-          try {
-            ui.pageInput.focus({ preventScroll: true });
-            ui.pageInput.select();
-          } catch (_) {}
-        },
-        true
-      );
+      ui.pageJumpBtn.addEventListener("click", (e) => {
+        swallowAll(e);
+        ui.pageInput.value = "";
+        ui.pageInput.classList.add("is-open");
+        try { ui.pageInput.focus({ preventScroll: true }); ui.pageInput.select(); } catch (_) {}
+      }, true);
 
       const closePageInput = () => ui.pageInput.classList.remove("is-open");
 
       ui.pageInput.addEventListener("keydown", (e) => {
-        if (e.key === "Escape") {
-          e.preventDefault();
-          closePageInput();
-          return;
-        }
+        if (e.key === "Escape") { e.preventDefault(); closePageInput(); return; }
         if (e.key === "Enter") {
           e.preventDefault();
           const v = parseInt(String(ui.pageInput.value || ""), 10);
@@ -796,7 +638,7 @@
   function attachKeyboard(wrapper, cfg, state) {
     if (!cfg || !cfg.enableKeyboard) return;
     wrapper.addEventListener("keydown", (e) => {
-      const tag = e.target && e.target.tagName ? String(e.target.tagName).toLowerCase() : "";
+      const tag = (e.target && e.target.tagName) ? String(e.target.tagName).toLowerCase() : "";
       if (tag === "input" || tag === "textarea" || tag === "select") return;
 
       if (e.key === "ArrowLeft") { e.preventDefault(); state.goPrev(false); }
@@ -805,7 +647,7 @@
     });
   }
 
-  // Re-enable gentle hover tilt (book only), keep background locked.
+  // Gentle hover tilt (book only), background remains locked
   function attachHoverTilt(shell, cfg, rootEl) {
     if (prefersReducedMotion(cfg)) return () => {};
     const stageEl = shell.stage;
@@ -816,10 +658,8 @@
 
     function apply() {
       raf = 0;
-      // small tilt so it doesn't “fly”
       root.style.setProperty("--mag-tilt-x", `${ty.toFixed(2)}deg`);
       root.style.setProperty("--mag-tilt-y", `${tx.toFixed(2)}deg`);
-      // background ALWAYS locked
       root.style.setProperty("--mag-bg-x", "0px");
       root.style.setProperty("--mag-bg-y", "0px");
     }
@@ -831,9 +671,8 @@
       const cx = clamp(nx, -1, 1);
       const cy = clamp(ny, -1, 1);
 
-      tx = cx * 4;     // rotateY
-      ty = -cy * 3;    // rotateX
-
+      tx = cx * 4;   // rotateY
+      ty = -cy * 3;  // rotateX
       if (!raf) raf = requestAnimationFrame(apply);
     }
 
@@ -846,7 +685,6 @@
 
     stageEl.addEventListener("pointermove", onPointerMove, { passive: true });
     stageEl.addEventListener("pointerleave", reset, { passive: true });
-
     reset();
 
     return () => {
@@ -855,32 +693,31 @@
     };
   }
 
-  // Pointer-based gestures (touch + mouse) – no duplicate touchstart/touchend
+  // Pointer-only gestures (works for touch + mouse)
   function attachGestures(shell, state) {
     const stage = shell.stage;
     const objectEl = shell.object;
 
-    const EDGE = 0.24;          // bigger edge zone for taps
-    const SWIPE_MIN_PX = 28;    // easier swipes
+    const EDGE = 0.24;        // larger edge area
+    const SWIPE_MIN_PX = 28;  // easier swipe
     const SWIPE_MAX_Y_PX = 110;
 
     let down = false;
     let sx = 0, sy = 0, st = 0;
-    let pointerId = null;
+    let pid = null;
 
     const onDown = (e) => {
-      // Don't steal from controls / links
       const t = e.target;
       const tag = t && t.tagName ? String(t.tagName).toLowerCase() : "";
       if (tag === "button" || tag === "input" || tag === "a") return;
 
       down = true;
-      pointerId = e.pointerId;
+      pid = e.pointerId;
       sx = e.clientX;
       sy = e.clientY;
       st = Date.now();
 
-      try { stage.setPointerCapture(pointerId); } catch (_) {}
+      try { stage.setPointerCapture(pid); } catch (_) {}
     };
 
     const onUp = (e) => {
@@ -913,41 +750,37 @@
 
         if (nx <= EDGE) state.goPrev(false);
         else if (nx >= 1 - EDGE) state.goNext(false);
-        else state.goNext(false); // middle advances
+        else state.goNext(false);
       }
     };
 
+    const onCancel = () => { down = false; };
+
     stage.addEventListener("pointerdown", onDown, { passive: true });
     stage.addEventListener("pointerup", onUp, { passive: true });
-    stage.addEventListener("pointercancel", () => { down = false; }, { passive: true });
+    stage.addEventListener("pointercancel", onCancel, { passive: true });
 
     return () => {
       stage.removeEventListener("pointerdown", onDown);
       stage.removeEventListener("pointerup", onUp);
-      stage.removeEventListener("pointercancel", () => {});
+      stage.removeEventListener("pointercancel", onCancel);
     };
   }
 
   function getRoots() {
-    return qa(".bcs-mag, .mag-plug").filter(
-      (el) => el instanceof HTMLElement && el.getAttribute("data-json-url")
+    return qa(".bcs-mag, .mag-plug").filter(el =>
+      el instanceof HTMLElement && el.getAttribute("data-json-url")
     );
   }
 
   function makeAudioController(cfg, manifest, baseHref) {
     const urlFromCfg = cfg && cfg.musicUrl ? String(cfg.musicUrl) : "";
     const urlFromManifest =
-      manifest && manifest.music
-        ? String(manifest.music.url || manifest.music.src || "")
-        : "";
+      manifest && manifest.music ? String(manifest.music.url || manifest.music.src || "") : "";
     const musicUrl = resolveUrlMaybe(baseHref, urlFromCfg || urlFromManifest || "");
 
     if (!musicUrl) {
-      return {
-        has: false,
-        toggle: () => {},
-        setVolume: () => {},
-      };
+      return { has: false, toggle: () => {}, setVolume: () => {} };
     }
 
     const a = new Audio();
@@ -956,30 +789,14 @@
     a.preload = "auto";
     a.volume = 0.5;
 
-    let started = false;
-
-    const play = async () => {
-      try {
-        await a.play();
-        started = true;
-      } catch (_) {
-        // Autoplay blocked until user gesture; ignore.
-      }
-    };
-
-    const pause = () => {
-      try { a.pause(); } catch (_) {}
-    };
+    const play = async () => { try { await a.play(); } catch (_) {} };
+    const pause = () => { try { a.pause(); } catch (_) {} };
 
     return {
       has: true,
-      toggle: () => {
-        if (a.paused) play();
-        else pause();
-      },
+      toggle: () => { if (a.paused) play(); else pause(); },
       setVolume: (v) => {
         a.volume = clamp(Number(v || 0), 0, 1);
-        // if user sets volume and it’s paused, attempt play (gesture likely exists)
         if (a.paused && a.volume > 0) play();
       },
     };
@@ -1001,9 +818,7 @@
     const transform = makeTransformController(rootEl, cfg);
     setLabel(ui, "Loading…", false);
 
-    let viewer = null,
-      manifest = null,
-      baseHref = "";
+    let viewer = null, manifest = null, baseHref = "";
     try {
       const loaded = await loadIssue(cfg, jsonUrl);
       viewer = loaded.viewer;
@@ -1011,20 +826,16 @@
       baseHref = loaded.baseHref;
     } catch (_) {
       setLabel(ui, "Failed to load issue", true);
-      if (ui.btnPrev) ui.btnPrev.disabled = true;
-      if (ui.btnNext) ui.btnNext.disabled = true;
       return;
     }
 
     applyManifestTheme(shell, rootEl, cfg, manifest, baseHref);
 
-    const { byId, pages } = indexPagesById(viewer);
+    const { byId } = indexPagesById(viewer);
     const spreads = normalizeSpreads(viewer, byId);
 
     if (!spreads.length) {
       setLabel(ui, "No spreads", true);
-      if (ui.btnPrev) ui.btnPrev.disabled = true;
-      if (ui.btnNext) ui.btnNext.disabled = true;
       return;
     }
 
@@ -1038,8 +849,8 @@
     // build TOC list (best-effort)
     if (ui.tocList) {
       const items = [];
-      // manifest toc
       const tocFromManifest = manifest && Array.isArray(manifest.toc) ? manifest.toc : null;
+
       if (tocFromManifest && tocFromManifest.length) {
         tocFromManifest.forEach((it) => {
           items.push({
@@ -1048,7 +859,6 @@
           });
         });
       } else {
-        // fallback: build by spreads
         spreads.forEach((sp, i) => {
           const a = sp.pageLeftNumber || (i * 2 + 1);
           const b = sp.pageRightNumber || (i * 2 + 2);
@@ -1057,17 +867,15 @@
       }
 
       ui.tocList.innerHTML = items
-        .map(
-          (it, idx) => `
-            <button type="button"
-              class="mag-plug-toc-item"
-              data-page="${it.page}"
-              style="width:100%; text-align:left; padding:10px 10px; margin:0; border:0;
-                     background:transparent; color:#fff; cursor:pointer; border-radius:10px;">
-              ${it.label}
-            </button>
-          `
-        )
+        .map((it) => `
+          <button type="button"
+            class="mag-plug-toc-item"
+            data-page="${it.page}"
+            style="width:100%; text-align:left; padding:10px 10px; margin:0; border:0;
+                   background:transparent; color:#fff; cursor:pointer; border-radius:10px;">
+            ${it.label}
+          </button>
+        `)
         .join("");
 
       ui.tocList.addEventListener("click", (e) => {
@@ -1077,26 +885,25 @@
         if (!Number.isFinite(page)) return;
         swallowAll(e);
         if (ui.tocPanel) ui.tocPanel.style.display = "none";
-        // Jump and open
         state.goToPage(page);
       }, true);
     }
 
     const audioCtl = makeAudioController(cfg, manifest, baseHref);
 
-    // NAV GUARD: prevents double-turn bursts (in addition to event suppression)
+    // NAV GUARD: prevents rapid double turns from a single interaction
     const NAV_GUARD_MS = 520;
     let lastNavAt = 0;
 
-    // view state
     const state = {
       isOpen: false,
       coverSide: "front",
       spreadIndex: 0,
       hasOpenedOnce: false,
       spreads,
-      viewMode: "spread", // "spread" | "single"
-      singleSide: "right", // which page in single mode we’re showing ("left"|"right")
+
+      viewMode: "spread",   // "spread" | "single"
+      singleSide: "right",  // "left" | "right"
 
       toggleViewMode: () => {
         if (!state.isOpen) return;
@@ -1113,14 +920,11 @@
 
       goCover: (side = "front") => {
         state.isOpen = false;
-        state.coverSide = side === "back" ? "back" : "front";
+        state.coverSide = (side === "back") ? "back" : "front";
         shell.wrapper.classList.remove("is-open");
         shell.wrapper.classList.remove("is-opening");
 
         renderCover(shell.object, coverFront, coverBack, coverText, state.coverSide, () => state.openIssue());
-
-        if (ui.btnPrev) ui.btnPrev.disabled = true;
-        if (ui.btnNext) ui.btnNext.disabled = false;
 
         setLabel(ui, "Cover", !!cfg.announcePageChanges);
         sendEvent(cfg, issueId, sessionId, "cover_view", null, { side: state.coverSide });
@@ -1179,7 +983,9 @@
 
         let label = `Spread ${state.spreadIndex + 1} / ${spreads.length}`;
         if (state.viewMode === "single") {
-          const one = state.singleSide === "right" ? (pnR || (state.spreadIndex * 2 + 2)) : (pnL || (state.spreadIndex * 2 + 1));
+          const one = state.singleSide === "right"
+            ? (pnR || (state.spreadIndex * 2 + 2))
+            : (pnL || (state.spreadIndex * 2 + 1));
           label = `Page ${one}`;
         } else if (pnL || pnR) {
           const a = pnL ? String(pnL) : "—";
@@ -1188,25 +994,6 @@
         }
 
         setLabel(ui, label, announce && !!cfg.announcePageChanges);
-
-        // button enable/disable logic depends on view mode
-        if (ui.btnPrev) {
-          if (state.viewMode === "single") {
-            const atFirst = state.spreadIndex === 0 && state.singleSide === "left";
-            ui.btnPrev.disabled = atFirst;
-          } else {
-            ui.btnPrev.disabled = state.spreadIndex <= 0;
-          }
-        }
-        if (ui.btnNext) {
-          if (state.viewMode === "single") {
-            const atLast = state.spreadIndex === spreads.length - 1 && state.singleSide === "right";
-            ui.btnNext.disabled = atLast;
-          } else {
-            ui.btnNext.disabled = state.spreadIndex >= spreads.length - 1;
-          }
-        }
-
         updateStacks(shell.stage, state.spreadIndex, spreads.length);
 
         const pageIndex =
@@ -1237,7 +1024,6 @@
             state.render(true);
             return;
           }
-          // left -> go previous spread's right page
           if (state.spreadIndex <= 0) { state.goCover("front"); return; }
           state.spreadIndex = clamp(state.spreadIndex - 1, 0, spreads.length - 1);
           state.singleSide = "right";
@@ -1266,7 +1052,6 @@
             state.render(true);
             return;
           }
-          // right -> go next spread's left page
           if (state.spreadIndex >= spreads.length - 1) { state.goCover("back"); return; }
           state.spreadIndex = clamp(state.spreadIndex + 1, 0, spreads.length - 1);
           state.singleSide = "left";
@@ -1280,7 +1065,7 @@
       },
     };
 
-    // Controls
+    // Controls (no arrows)
     attachNav(ui, state, transform, audioCtl);
     attachKeyboard(shell.wrapper, cfg, state);
 
@@ -1295,9 +1080,7 @@
   }
 
   function bootAll() {
-    getRoots().forEach((el) => {
-      bootOne(el);
-    });
+    getRoots().forEach((el) => { bootOne(el); });
   }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootAll);

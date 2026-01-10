@@ -1,9 +1,9 @@
 /* =====================================================================
-   MAG PLUG — REALISM BUILD v3 (UPDATED)
+   MAG PLUG — REALISM BUILD v3 (CLEANED + LOCK PATCH)
    Search tags:
    [VARS] [THEME-HARDEN] [STAGE] [BG-PARALLAX] [COVER-REALISM] [OPEN-SIZING]
    [SPREAD-REALISM] [STACK-ILLUSION] [PAGES-PAPER] [PAGE-CURL]
-   [ELEMENTS] [CONTROLS] [SOUND] [RESPONSIVE] [PATCHES]
+   [ELEMENTS] [CONTROLS] [SOUND] [RESPONSIVE]
    ===================================================================== */
 
 /* =========================
@@ -16,13 +16,13 @@
   --mag-plug-gutter-w: 8px;
   --mag-plug-edge: rgba(0,0,0,0.08);
 
-  /* Page padding is OFF by default (full-bleed). */
+  /* Page padding (full-bleed by default) */
   --mag-page-pad-top: 0px;
   --mag-page-pad-bottom: 0px;
   --mag-page-pad-inner: 0px;
   --mag-page-pad-outer: 0px;
 
-  /* OPEN BOOK WIDTH CONTROL (v2 bump keeps) */
+  /* OPEN BOOK WIDTH CONTROL (bumped) */
   --mag-open-max: min(88vw, 1280px);
 
   /* =========================
@@ -45,8 +45,7 @@
   --mag-edge-bevel: 0 0 0 1px rgba(0,0,0,0.06) inset;
 
   /* =========================
-     [PARALLAX] 3D tilt vars (driven by JS)
-     NOTE: locked later by PATCH v4; keep here as defaults.
+     [PARALLAX] (driven by JS, but may be locked by patch)
      ========================= */
   --mag-tilt-x: 0deg;
   --mag-tilt-y: 0deg;
@@ -55,8 +54,7 @@
   --mag-parallax-scale: 1;
 
   /* =========================
-     [BG-PARALLAX] true depth background vars (driven by JS)
-     NOTE: locked later by PATCH v4; keep here as defaults.
+     [BG-PARALLAX] (driven by JS, but locked by patch)
      ========================= */
   --mag-bg-x: 0px;
   --mag-bg-y: 0px;
@@ -76,21 +74,11 @@
   margin-bottom:0 !important;
   padding:0 !important;
 }
-
 .mag-plug,
-.mag-plug *{
-  box-sizing:border-box;
-}
-
-.mag-plug img{
-  max-width:none !important;
-  height:auto;
-}
-
+.mag-plug *{ box-sizing:border-box; }
+.mag-plug img{ max-width:none !important; height:auto; }
 .mag-plug button,
-.mag-plug a{
-  font:inherit;
-}
+.mag-plug a{ font:inherit; }
 
 /* =====================================================================
    [STAGE]
@@ -103,7 +91,6 @@
   margin:0;
   padding:0;
 }
-
 .mag-plug-stage{
   position:relative;
   width:100%;
@@ -124,22 +111,18 @@ body.admin-bar .mag-plug-stage{
   height:clamp(750px, calc(72vh + 32px), 1050px);
 }
 @media (max-width:782px){
-  body.admin-bar .mag-plug-stage{
-    height:clamp(700px, calc(72vh + 46px), 980px);
-  }
+  body.admin-bar .mag-plug-stage{ height:clamp(700px, calc(72vh + 46px), 980px); }
 }
 @media (max-width:480px){
-  body.admin-bar .mag-plug-stage{
-    height:clamp(600px, calc(72vh + 46px), 900px);
-  }
+  body.admin-bar .mag-plug-stage{ height:clamp(600px, calc(72vh + 46px), 900px); }
 }
 
 /* =====================================================================
-   [BG-PARALLAX] BACKGROUND LAYER (true depth)
+   [BG-PARALLAX] BACKGROUND LAYER
    ===================================================================== */
 .mag-plug-background{
   position:absolute;
-  inset:-18px;
+  inset:-18px; /* extra bleed */
   background-size:cover;
   background-repeat:no-repeat;
   background-position:calc(50% + var(--mag-bg-x)) calc(50% + var(--mag-bg-y));
@@ -148,7 +131,6 @@ body.admin-bar .mag-plug-stage{
   filter:saturate(1.02);
   z-index:0;
 }
-
 @media (prefers-reduced-motion: reduce){
   .mag-plug-background{
     background-position:50% 50% !important;
@@ -168,20 +150,17 @@ body.admin-bar .mag-plug-stage{
   margin:0;
   padding:0;
   transform-style:preserve-3d;
-  transform:translateZ(var(--mag-parallax-z))
-            rotateX(var(--mag-tilt-x))
-            rotateY(var(--mag-tilt-y))
-            rotateZ(var(--mag-tilt-z))
-            scale(var(--mag-parallax-scale));
+  transform:
+    translateZ(var(--mag-parallax-z))
+    rotateX(var(--mag-tilt-x))
+    rotateY(var(--mag-tilt-y))
+    rotateZ(var(--mag-tilt-z))
+    scale(var(--mag-parallax-scale));
   transition:transform 220ms ease;
   will-change:transform;
 }
-
 @media (prefers-reduced-motion: reduce){
-  .mag-plug-object{
-    transition:none !important;
-    transform:none !important;
-  }
+  .mag-plug-object{ transition:none !important; transform:none !important; }
 }
 
 /* =====================================================================
@@ -198,43 +177,41 @@ body.admin-bar .mag-plug-stage{
   align-items:center;
   justify-content:center;
 }
-
-/* v2 bump keeps */
 .mag-plug-cover-inner{
   position:relative;
   overflow:hidden;
   height:auto;
-  max-height:82vh;
+  max-height:82vh;                 /* bumped */
   aspect-ratio:210 / 297;
-  max-width:min(94vw, 980px);
+  max-width:min(94vw, 980px);      /* bumped */
   border-radius:0;
   box-shadow:0 26px 82px rgba(0,0,0,0.30);
-  transform-style:preserve-3d; /* cover 2-sided */
+  transform-style:preserve-3d;
 }
-
 .mag-plug-cover-inner::before{
   content:"";
   position:absolute;
   inset:0;
   pointer-events:none;
-  background:linear-gradient(120deg,
-    rgba(255,255,255,0.20) 0%,
-    rgba(255,255,255,0.00) 40%,
-    rgba(0,0,0,0.00) 62%,
-    rgba(0,0,0,0.12) 100%
-  );
+  background:linear-gradient(120deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.00) 40%, rgba(0,0,0,0.00) 62%, rgba(0,0,0,0.12) 100%);
   mix-blend-mode:overlay;
   opacity:0.65;
 }
-
 .mag-plug-cover-img{
   display:block;
   width:100%;
   height:100%;
   object-fit:cover;
-  backface-visibility:hidden; /* cover 2-sided */
+  backface-visibility:hidden;
 }
-
+.mag-plug-cover-back{
+  position:absolute;
+  inset:0;
+  transform:rotateY(180deg);
+}
+.mag-plug-cover-inner[data-side="back"]{
+  transform:rotateY(180deg);
+}
 .mag-plug-cover-text{
   position:absolute;
   left:0;
@@ -251,16 +228,14 @@ body.admin-bar .mag-plug-stage{
 /* =====================================================================
    [OPEN-SIZING]
    ===================================================================== */
-.mag-plug-wrapper.is-open .mag-plug-object{
-  padding:0;
-}
+.mag-plug-wrapper.is-open .mag-plug-object{ padding:0; }
 
 .mag-plug-spread,
 .mag-plug-page.single{
   width:100%;
   max-width:var(--mag-open-max);
   height:auto;
-  max-height:82vh; /* v2 bump keeps */
+  max-height:82vh; /* bumped */
   aspect-ratio:420 / 297;
   border-radius:0 !important;
   box-shadow:none !important;
@@ -282,6 +257,20 @@ body.admin-bar .mag-plug-stage{
   transform-style:preserve-3d;
 }
 
+/* [SPREAD BACK] show cover instead of page backs when rotating */
+.mag-plug-spread > *{ backface-visibility:hidden; }
+.mag-plug-spread-back{
+  position:absolute;
+  inset:0;
+  transform:rotateY(180deg) translateZ(-1px);
+  background-image:var(--mag-cover-front);
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  z-index:1;
+  pointer-events:none;
+}
+
 /* =====================================================================
    [STACK-ILLUSION]
    ===================================================================== */
@@ -298,23 +287,15 @@ body.admin-bar .mag-plug-stage{
   box-shadow:var(--mag-stack-shadow);
   background:
     linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(0,0,0,0.06)),
-    repeating-linear-gradient(
-      to bottom,
-      rgba(0,0,0,0.06) 0px,
-      rgba(0,0,0,0.06) 1px,
-      rgba(255,255,255,0.00) 2px,
-      rgba(255,255,255,0.00) 4px
-    ),
+    repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, rgba(255,255,255,0.00) 2px, rgba(255,255,255,0.00) 4px),
     var(--mag-stack-color);
 }
-
 .mag-plug-spread::before{
   width:min(calc(var(--mag-stack-left) * var(--mag-stack-step)), var(--mag-stack-max));
   left:calc(-1 * min(calc(var(--mag-stack-left) * var(--mag-stack-step)), var(--mag-stack-max)));
   border-right:0;
   transform:skewY(-1.2deg) translateZ(-2px);
 }
-
 .mag-plug-spread::after{
   width:min(calc(var(--mag-stack-right) * var(--mag-stack-step)), var(--mag-stack-max));
   right:calc(-1 * min(calc(var(--mag-stack-right) * var(--mag-stack-step)), var(--mag-stack-max)));
@@ -330,8 +311,7 @@ body.admin-bar .mag-plug-stage{
   position:relative;
   z-index:6;
   box-shadow:var(--mag-plug-gutter-shadow);
-  background:linear-gradient(
-    to right,
+  background:linear-gradient(to right,
     rgba(0,0,0,0.35) 0%,
     rgba(0,0,0,0.55) 42%,
     rgba(0,0,0,0.85) 50%,
@@ -339,7 +319,6 @@ body.admin-bar .mag-plug-stage{
     rgba(0,0,0,0.35) 100%
   );
 }
-
 .mag-plug-gutter::after{
   content:"";
   position:absolute;
@@ -363,22 +342,15 @@ body.admin-bar .mag-plug-stage{
   overflow:visible !important;
   z-index:2;
 }
-
 .mag-plug-page.left,
-.mag-plug-page.right{
-  border:0 !important;
-}
+.mag-plug-page.right{ border:0 !important; }
 
 .mag-plug-page,
 .mag-plug-page.single{
   background:
     radial-gradient(900px 700px at 30% 20%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 55%),
     radial-gradient(900px 700px at 75% 25%, rgba(0,0,0,0.045) 0%, rgba(0,0,0,0.0) 60%),
-    repeating-linear-gradient(135deg,
-      rgba(0,0,0,var(--mag-paper-grain)) 0px,
-      rgba(0,0,0,0.0) 2px,
-      rgba(255,255,255,0.0) 6px
-    ),
+    repeating-linear-gradient(135deg, rgba(0,0,0,var(--mag-paper-grain)) 0px, rgba(0,0,0,0.0) 2px, rgba(255,255,255,0.0) 6px),
     linear-gradient(to bottom, rgba(255,255,255,1), rgba(250,250,250,1));
   box-shadow:var(--mag-edge-bevel);
 }
@@ -394,12 +366,10 @@ body.admin-bar .mag-plug-stage{
   z-index:3;
   opacity:0.20;
 }
-
 .mag-plug-page.left::before{
   right:0;
   background:linear-gradient(to left, rgba(0,0,0,0.22), rgba(0,0,0,0.0));
 }
-
 .mag-plug-page.right::before{
   left:0;
   background:linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.0));
@@ -416,12 +386,10 @@ body.admin-bar .mag-plug-stage{
   z-index:2;
   opacity:0.08;
 }
-
 .mag-plug-page.left::after{
   left:0;
   background:linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.0));
 }
-
 .mag-plug-page.right::after{
   right:0;
   background:linear-gradient(to left, rgba(0,0,0,0.18), rgba(0,0,0,0.0));
@@ -440,17 +408,14 @@ body.admin-bar .mag-plug-stage{
   pointer-events:none;
   opacity:var(--mag-curl-strength);
 }
-
 .mag-plug-page.left .mag-plug-sheet::after{
   left:0;
   background:radial-gradient(18px 70% at 0% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
 }
-
 .mag-plug-page.right .mag-plug-sheet::after{
   right:0;
   background:radial-gradient(18px 70% at 100% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
 }
-
 .mag-plug-page.single{
   position:relative;
   overflow:visible !important;
@@ -467,11 +432,7 @@ body.admin-bar .mag-plug-stage{
   height:100%;
   overflow:visible !important;
 }
-
-.mag-plug-el{
-  position:absolute;
-}
-
+.mag-plug-el{ position:absolute; }
 .mag-plug-el img{
   display:block;
   width:100%;
@@ -479,7 +440,6 @@ body.admin-bar .mag-plug-stage{
   object-fit:cover;
   image-rendering:auto;
 }
-
 .mag-plug-el-text{
   overflow:hidden;
   word-break:break-word;
@@ -489,28 +449,21 @@ body.admin-bar .mag-plug-stage{
   -moz-osx-font-smoothing:grayscale;
   text-rendering:geometricPrecision;
 }
-
-.mag-plug-link{
-  display:block;
-}
+.mag-plug-link{ display:block; }
 
 /* =====================================================================
    [CONTROLS]
    ===================================================================== */
-
-/* Updated per earlier note: hide the top-left label without duplicate block later */
 .mag-plug-live{
-  position:absolute !important;
-  width:1px !important;
-  height:1px !important;
-  padding:0 !important;
-  margin:-1px !important;
-  overflow:hidden !important;
-  clip:rect(0,0,0,0) !important;
-  white-space:nowrap !important;
-  border:0 !important;
+  position:absolute;
+  left:12px;
+  top:12px;
+  z-index:10;
+  font-size:13px;
+  background:rgba(0,0,0,0.55);
+  color:#fff;
+  padding:6px 10px;
 }
-
 .mag-plug-controls{
   position:absolute;
   left:50%;
@@ -523,7 +476,6 @@ body.admin-bar .mag-plug-stage{
   background:rgba(0,0,0,0.55);
   padding:8px 10px;
 }
-
 .mag-plug-btn{
   appearance:none;
   border:1px solid rgba(255,255,255,0.35);
@@ -536,12 +488,10 @@ body.admin-bar .mag-plug-stage{
   cursor:pointer;
   border-radius:6px;
 }
-
 .mag-plug-btn:disabled{
   opacity:0.4;
   cursor:not-allowed;
 }
-
 .mag-plug-label{
   color:#fff;
   font-size:13px;
@@ -558,7 +508,6 @@ body.admin-bar .mag-plug-stage{
   bottom:14px;
   z-index:10;
 }
-
 .mag-plug-sound-btn{
   appearance:none;
   border:1px solid rgba(255,255,255,0.35);
@@ -569,7 +518,6 @@ body.admin-bar .mag-plug-stage{
   cursor:pointer;
   border-radius:6px;
 }
-
 .mag-plug-sound-menu{
   position:absolute;
   left:0;
@@ -581,9 +529,7 @@ body.admin-bar .mag-plug-stage{
   overflow:hidden;
   border-radius:10px;
 }
-
 .mag-plug-sound-menu.is-open{ display:block; }
-
 .mag-plug-sound-item{
   width:100%;
   text-align:left;
@@ -593,19 +539,14 @@ body.admin-bar .mag-plug-stage{
   color:#fff;
   cursor:pointer;
 }
-
-.mag-plug-sound-item:hover{
-  background:rgba(255,255,255,0.12);
-}
+.mag-plug-sound-item:hover{ background:rgba(255,255,255,0.12); }
 
 /* =====================================================================
    [RESPONSIVE]
    ===================================================================== */
 @media (max-width:920px){
   .mag-plug-wrapper.is-open .mag-plug-object{ padding:0; }
-
   .mag-plug-spread{ flex-direction:column; }
-
   .mag-plug-gutter{ display:none; }
 
   .mag-plug-page.left::before,
@@ -618,13 +559,6 @@ body.admin-bar .mag-plug-stage{
     content:none !important;
   }
 
-  /* FIX: remove the contradictory duplicate transforms.
-     Keep ONLY knob rotation (Z) on mobile. */
-  .mag-plug-object{
-    transform:rotateZ(var(--mag-tilt-z)) !important;
-    transition:transform 120ms ease !important;
-  }
-
   .mag-plug-background{
     background-position:50% 50% !important;
     transform:none !important;
@@ -635,7 +569,6 @@ body.admin-bar .mag-plug-stage{
    [KNOB] single radio-knob control
    ===================================================================== */
 .mag-plug-controls{ gap:10px; }
-
 .mag-plug-knob{
   position:relative;
   width:42px;
@@ -650,7 +583,6 @@ body.admin-bar .mag-plug-stage{
   justify-content:center;
   box-shadow:0 6px 18px rgba(0,0,0,0.25);
 }
-
 .mag-plug-knob::before{
   content:"";
   position:absolute;
@@ -661,7 +593,6 @@ body.admin-bar .mag-plug-stage{
     radial-gradient(circle at 70% 80%, rgba(0,0,0,0.35), rgba(0,0,0,0.00) 60%),
     rgba(255,255,255,0.06);
 }
-
 .mag-plug-knob-ind{
   position:absolute;
   width:2px;
@@ -671,7 +602,6 @@ body.admin-bar .mag-plug-stage{
   border-radius:2px;
   opacity:0.9;
 }
-
 .mag-plug-knob-menu{
   position:absolute;
   left:50%;
@@ -685,9 +615,7 @@ body.admin-bar .mag-plug-stage{
   padding:6px 0;
   z-index:12;
 }
-
 .mag-plug-knob-menu.is-open{ display:block; }
-
 .mag-plug-knob-item{
   width:100%;
   text-align:left;
@@ -698,7 +626,6 @@ body.admin-bar .mag-plug-stage{
   cursor:pointer;
   font-size:13px;
 }
-
 .mag-plug-knob-item:hover{ background:rgba(255,255,255,0.12); }
 
 .mag-plug-pagejump{
@@ -713,7 +640,6 @@ body.admin-bar .mag-plug-stage{
   border-radius:0;
   font-size:13px;
 }
-
 .mag-plug-pageinput{
   position:absolute;
   left:50%;
@@ -729,86 +655,54 @@ body.admin-bar .mag-plug-stage{
   border-radius:0;
   z-index:12;
 }
-
 .mag-plug-pageinput.is-open{ display:block; }
 
 /* =====================================================================
-   [COVER] 2-sided cover (front/back)
+   PATCH — hide top-left live label (keep for screen readers via JS aria-live)
    ===================================================================== */
-.mag-plug-cover-back{
-  position:absolute;
-  inset:0;
-  transform:rotateY(180deg);
-}
-.mag-plug-cover-inner[data-side="back"]{
-  transform:rotateY(180deg);
+.mag-plug-live{
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip:rect(0,0,0,0) !important;
+  white-space:nowrap !important;
+  border:0 !important;
 }
 
 /* =====================================================================
-   [SPREAD BACK] show cover instead of page backs when rotating
+   PATCH — STOP “FLYING” (lock ALL parallax/3D motion; allow knob Z rotate)
    ===================================================================== */
-.mag-plug-spread{ transform-style:preserve-3d; }
-.mag-plug-spread > *{ backface-visibility:hidden; }
-
-.mag-plug-spread-back{
-  position:absolute;
-  inset:0;
-  transform:rotateY(180deg) translateZ(-1px);
-  background-image:var(--mag-cover-front);
-  background-size:cover;
-  background-position:center;
-  background-repeat:no-repeat;
-  z-index:1;
-  pointer-events:none;
-}
-
-/* =====================================================================
-   [PATCHES] Consolidated v2 + v4
-   - Removes duplicates/contradictions
-   - Locks background/parallax/3D motion to stop “flying”
-   ===================================================================== */
-
-/* v2: lock background center (keep as a baseline even before v4) */
-.mag-plug-background{
-  background-position:50% 50% !important;
-}
-
-/* v4: STOP “FLYING” (lock ALL parallax/3D motion)
-   NOTE: keep --mag-tilt-z so the knob can rotate. */
 .mag-plug,
 .mag-plug-wrapper,
 .mag-plug-stage,
 .mag-plug-object{
-  --mag-tilt-x: 0deg !important;
-  --mag-tilt-y: 0deg !important;
-  --mag-parallax-z: 0px !important;
-  --mag-parallax-scale: 1 !important;
-
-  --mag-bg-x: 0px !important;
-  --mag-bg-y: 0px !important;
-  --mag-bg-scale: 1 !important;
+  --mag-tilt-x:0deg !important;
+  --mag-tilt-y:0deg !important;
+  --mag-parallax-z:0px !important;
+  --mag-parallax-scale:1 !important;
+  --mag-bg-x:0px !important;
+  --mag-bg-y:0px !important;
+  --mag-bg-scale:1 !important;
 }
-
 .mag-plug-background{
+  background-position:50% 50% !important;
   transform:none !important;
   will-change:auto !important;
 }
-
-.mag-plug-object{
-  transform:rotateZ(var(--mag-tilt-z)) !important;
-  transition:transform 120ms ease !important;
-  will-change:transform !important;
-  transform-style:flat !important;
-}
-
 .mag-plug-stage{
   perspective:none !important;
   perspective-origin:50% 50% !important;
 }
-
+.mag-plug-object{
+  transform: rotateZ(var(--mag-tilt-z)) !important;
+  transition: transform 120ms ease !important;
+  will-change: transform !important;
+  transform-style: flat !important;
+}
 @media (prefers-reduced-motion: no-preference){
   .mag-plug-object,
-  .mag-plug-background{
-    animation:none !important;
-  }
+  .mag-plug-background{ animation:none !important; }
 }

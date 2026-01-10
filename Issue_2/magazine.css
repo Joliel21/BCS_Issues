@@ -1,64 +1,57 @@
 /* =====================================================================
-   MAG PLUG — REALISM BUILD v3 (CLEANED + LOCK PATCH)
-   Search tags:
-   [VARS] [THEME-HARDEN] [STAGE] [BG-PARALLAX] [COVER-REALISM] [OPEN-SIZING]
+   MAG PLUG — REALISM BUILD v4 (WP)
+   Tags:
+   [VARS] [THEME-HARDEN] [STAGE] [BG] [BOOK-MOTION] [COVER-REALISM] [OPEN-SIZING]
    [SPREAD-REALISM] [STACK-ILLUSION] [PAGES-PAPER] [PAGE-CURL]
-   [ELEMENTS] [CONTROLS] [SOUND] [RESPONSIVE]
+   [ELEMENTS] [CONTROLS] [RESPONSIVE] [TOUCH]
    ===================================================================== */
 
 /* =========================
    [VARS] GLOBAL TUNING
    ========================= */
 :root{
-  --mag-plug-gutter-shadow: 0 0 5px rgba(0,0,0,0.12);
+  --mag-plug-gutter-shadow: 0 0 5px rgba(0,0,0,0.14);
   --mag-plug-page-shadow: 0 10px 30px rgba(0,0,0,0.18);
-  --mag-plug-shadow: 0 18px 60px rgba(0,0,0,0.08);
-  --mag-plug-gutter-w: 8px;
-  --mag-plug-edge: rgba(0,0,0,0.08);
+  --mag-plug-shadow: 0 18px 60px rgba(0,0,0,0.10);
 
-  /* Page padding (full-bleed by default) */
+  --mag-plug-gutter-w: 10px;
+  --mag-plug-edge: rgba(0,0,0,0.10);
+
+  /* Page padding is OFF by default (full-bleed). */
   --mag-page-pad-top: 0px;
   --mag-page-pad-bottom: 0px;
   --mag-page-pad-inner: 0px;
   --mag-page-pad-outer: 0px;
 
-  /* OPEN BOOK WIDTH CONTROL (bumped) */
+  /* OPEN BOOK WIDTH CONTROL */
   --mag-open-max: min(88vw, 1280px);
 
-  /* =========================
-     [STACK-ILLUSION]
-     ========================= */
+  /* [STACK-ILLUSION] */
   --mag-stack-left: 10;
   --mag-stack-right: 10;
   --mag-stack-step: 0.9px;
-  --mag-stack-max: 28px;
+  --mag-stack-max: 30px;
   --mag-stack-color: rgba(245,245,245,1);
-  --mag-stack-edge: rgba(0,0,0,0.10);
-  --mag-stack-shadow: 0 12px 34px rgba(0,0,0,0.20);
+  --mag-stack-edge: rgba(0,0,0,0.12);
+  --mag-stack-shadow: 0 14px 40px rgba(0,0,0,0.22);
 
-  /* =========================
-     [PAGES-PAPER]
-     ========================= */
+  /* [PAGES-PAPER] */
   --mag-paper-grain: 0.05;
   --mag-curl-strength: 0.24;
-  --mag-spread-lift: 0 30px 90px rgba(0,0,0,0.28);
+  --mag-spread-lift: 0 34px 98px rgba(0,0,0,0.30);
   --mag-edge-bevel: 0 0 0 1px rgba(0,0,0,0.06) inset;
 
-  /* =========================
-     [PARALLAX] (driven by JS, but may be locked by patch)
-     ========================= */
+  /* [BOOK-MOTION] (driven by JS) */
   --mag-tilt-x: 0deg;
   --mag-tilt-y: 0deg;
   --mag-tilt-z: 0deg;
   --mag-parallax-z: 0px;
   --mag-parallax-scale: 1;
 
-  /* =========================
-     [BG-PARALLAX] (driven by JS, but locked by patch)
-     ========================= */
+  /* [BG] (driven by JS, but typically locked by plugin inline patch) */
   --mag-bg-x: 0px;
   --mag-bg-y: 0px;
-  --mag-bg-scale: 1.02;
+  --mag-bg-scale: 1;
 }
 
 /* =====================================================================
@@ -74,11 +67,9 @@
   margin-bottom:0 !important;
   padding:0 !important;
 }
-.mag-plug,
-.mag-plug *{ box-sizing:border-box; }
+.mag-plug, .mag-plug *{ box-sizing:border-box; }
 .mag-plug img{ max-width:none !important; height:auto; }
-.mag-plug button,
-.mag-plug a{ font:inherit; }
+.mag-plug button, .mag-plug a{ font:inherit; }
 
 /* =====================================================================
    [STAGE]
@@ -102,43 +93,37 @@
   justify-content:center;
   margin:0;
   padding:0;
+
   perspective:1200px;
   perspective-origin:50% 45%;
+
+  /* [TOUCH] allow horizontal swipe gestures to be handled */
+  touch-action: pan-y;
 }
 
 /* Logged-in (WP admin bar present) */
-body.admin-bar .mag-plug-stage{
-  height:clamp(750px, calc(72vh + 32px), 1050px);
-}
-@media (max-width:782px){
-  body.admin-bar .mag-plug-stage{ height:clamp(700px, calc(72vh + 46px), 980px); }
-}
-@media (max-width:480px){
-  body.admin-bar .mag-plug-stage{ height:clamp(600px, calc(72vh + 46px), 900px); }
-}
+body.admin-bar .mag-plug-stage{ height:clamp(750px, calc(72vh + 32px), 1050px); }
+@media (max-width:782px){ body.admin-bar .mag-plug-stage{ height:clamp(700px, calc(72vh + 46px), 980px); } }
+@media (max-width:480px){ body.admin-bar .mag-plug-stage{ height:clamp(600px, calc(72vh + 46px), 900px); } }
 
 /* =====================================================================
-   [BG-PARALLAX] BACKGROUND LAYER
+   [BG] BACKGROUND LAYER
    ===================================================================== */
 .mag-plug-background{
   position:absolute;
-  inset:-18px; /* extra bleed */
+  inset:-18px;
   background-size:cover;
   background-repeat:no-repeat;
-  background-position:calc(50% + var(--mag-bg-x)) calc(50% + var(--mag-bg-y));
-  transform:scale(var(--mag-bg-scale));
-  will-change:background-position, transform;
+  background-position: calc(50% + var(--mag-bg-x)) calc(50% + var(--mag-bg-y));
+  transform: scale(var(--mag-bg-scale));
+  will-change: background-position, transform;
   filter:saturate(1.02);
   z-index:0;
 }
-@media (prefers-reduced-motion: reduce){
-  .mag-plug-background{
-    background-position:50% 50% !important;
-    transform:none !important;
-  }
-}
 
-/* Container that holds cover or spread */
+/* =====================================================================
+   [BOOK-MOTION] Container that holds cover or spread
+   ===================================================================== */
 .mag-plug-object{
   position:relative;
   z-index:1;
@@ -149,6 +134,7 @@ body.admin-bar .mag-plug-stage{
   justify-content:center;
   margin:0;
   padding:0;
+
   transform-style:preserve-3d;
   transform:
     translateZ(var(--mag-parallax-z))
@@ -156,11 +142,26 @@ body.admin-bar .mag-plug-stage{
     rotateY(var(--mag-tilt-y))
     rotateZ(var(--mag-tilt-z))
     scale(var(--mag-parallax-scale));
-  transition:transform 220ms ease;
-  will-change:transform;
+  transition: transform 180ms ease;
+  will-change: transform;
 }
+
 @media (prefers-reduced-motion: reduce){
   .mag-plug-object{ transition:none !important; transform:none !important; }
+  .mag-plug-background{ background-position:50% 50% !important; transform:none !important; }
+}
+
+/* =====================================================================
+   [OPENING] first-open animation hook (JS toggles .is-opening)
+   ===================================================================== */
+.mag-plug-wrapper.is-opening .mag-plug-object{
+  transition: transform 850ms ease;
+  transform:
+    translateZ(0px)
+    rotateX(0deg)
+    rotateY(0deg)
+    rotateZ(var(--mag-tilt-z))
+    scale(1);
 }
 
 /* =====================================================================
@@ -176,14 +177,16 @@ body.admin-bar .mag-plug-stage{
   display:flex;
   align-items:center;
   justify-content:center;
+  border:0;
+  padding:0;
 }
 .mag-plug-cover-inner{
   position:relative;
   overflow:hidden;
   height:auto;
-  max-height:82vh;                 /* bumped */
+  max-height:82vh;
   aspect-ratio:210 / 297;
-  max-width:min(94vw, 980px);      /* bumped */
+  max-width:min(94vw, 980px);
   border-radius:0;
   box-shadow:0 26px 82px rgba(0,0,0,0.30);
   transform-style:preserve-3d;
@@ -193,7 +196,7 @@ body.admin-bar .mag-plug-stage{
   position:absolute;
   inset:0;
   pointer-events:none;
-  background:linear-gradient(120deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.00) 40%, rgba(0,0,0,0.00) 62%, rgba(0,0,0,0.12) 100%);
+  background: linear-gradient(120deg, rgba(255,255,255,0.20) 0%, rgba(255,255,255,0.00) 40%, rgba(0,0,0,0.00) 62%, rgba(0,0,0,0.12) 100% );
   mix-blend-mode:overlay;
   opacity:0.65;
 }
@@ -207,15 +210,15 @@ body.admin-bar .mag-plug-stage{
 .mag-plug-cover-back{
   position:absolute;
   inset:0;
-  transform:rotateY(180deg);
+  transform: rotateY(180deg);
 }
 .mag-plug-cover-inner[data-side="back"]{
-  transform:rotateY(180deg);
+  transform: rotateY(180deg);
 }
+
 .mag-plug-cover-text{
   position:absolute;
-  left:0;
-  right:0;
+  left:0; right:0;
   bottom:18px;
   text-align:center;
   color:#fff;
@@ -235,7 +238,7 @@ body.admin-bar .mag-plug-stage{
   width:100%;
   max-width:var(--mag-open-max);
   height:auto;
-  max-height:82vh; /* bumped */
+  max-height:82vh;
   aspect-ratio:420 / 297;
   border-radius:0 !important;
   box-shadow:none !important;
@@ -250,10 +253,13 @@ body.admin-bar .mag-plug-stage{
   flex-direction:row;
   align-items:stretch;
   justify-content:center;
-  background:transparent;
+
+  /* IMPORTANT: keep a solid base so you never “see through” the gutter */
+  background: #fff;
+
   overflow:visible !important;
   border-radius:0 !important;
-  box-shadow:var(--mag-spread-lift);
+  box-shadow: var(--mag-spread-lift);
   transform-style:preserve-3d;
 }
 
@@ -262,8 +268,8 @@ body.admin-bar .mag-plug-stage{
 .mag-plug-spread-back{
   position:absolute;
   inset:0;
-  transform:rotateY(180deg) translateZ(-1px);
-  background-image:var(--mag-cover-front);
+  transform: rotateY(180deg) translateZ(-1px);
+  background-image: var(--mag-cover-front);
   background-size:cover;
   background-position:center;
   background-repeat:no-repeat;
@@ -287,47 +293,50 @@ body.admin-bar .mag-plug-stage{
   box-shadow:var(--mag-stack-shadow);
   background:
     linear-gradient(to bottom, rgba(255,255,255,0.35), rgba(0,0,0,0.06)),
-    repeating-linear-gradient(to bottom, rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px, rgba(255,255,255,0.00) 2px, rgba(255,255,255,0.00) 4px),
+    repeating-linear-gradient(to bottom,
+      rgba(0,0,0,0.06) 0px, rgba(0,0,0,0.06) 1px,
+      rgba(255,255,255,0.00) 2px, rgba(255,255,255,0.00) 4px
+    ),
     var(--mag-stack-color);
 }
 .mag-plug-spread::before{
   width:min(calc(var(--mag-stack-left) * var(--mag-stack-step)), var(--mag-stack-max));
   left:calc(-1 * min(calc(var(--mag-stack-left) * var(--mag-stack-step)), var(--mag-stack-max)));
   border-right:0;
-  transform:skewY(-1.2deg) translateZ(-2px);
+  transform: skewY(-1.2deg) translateZ(-2px);
 }
 .mag-plug-spread::after{
   width:min(calc(var(--mag-stack-right) * var(--mag-stack-step)), var(--mag-stack-max));
   right:calc(-1 * min(calc(var(--mag-stack-right) * var(--mag-stack-step)), var(--mag-stack-max)));
   border-left:0;
-  transform:skewY(1.2deg) translateZ(-2px);
+  transform: skewY(1.2deg) translateZ(-2px);
 }
 
 /* =====================================================================
-   GUTTER
+   [GUTTER]
    ===================================================================== */
 .mag-plug-gutter{
   flex:0 0 var(--mag-plug-gutter-w);
   position:relative;
   z-index:6;
-  box-shadow:var(--mag-plug-gutter-shadow);
-  background:linear-gradient(to right,
-    rgba(0,0,0,0.35) 0%,
-    rgba(0,0,0,0.55) 42%,
-    rgba(0,0,0,0.85) 50%,
-    rgba(0,0,0,0.55) 58%,
-    rgba(0,0,0,0.35) 100%
-  );
+  box-shadow: var(--mag-plug-gutter-shadow);
+  background:
+    linear-gradient(to right,
+      rgba(0,0,0,0.28) 0%,
+      rgba(0,0,0,0.50) 42%,
+      rgba(0,0,0,0.78) 50%,
+      rgba(0,0,0,0.50) 58%,
+      rgba(0,0,0,0.28) 100%
+    );
 }
 .mag-plug-gutter::after{
   content:"";
   position:absolute;
-  top:0;
-  bottom:0;
+  top:0; bottom:0;
   left:50%;
   width:1px;
-  transform:translateX(-0.5px);
-  background:rgba(0,0,0,0.95);
+  transform: translateX(-0.5px);
+  background: rgba(0,0,0,0.95);
   opacity:0.55;
   pointer-events:none;
 }
@@ -339,61 +348,46 @@ body.admin-bar .mag-plug-stage{
   position:relative;
   flex:1 1 50%;
   height:100%;
-  overflow:visible !important;
+  overflow:hidden; /* keep page edges clean */
   z-index:2;
-}
-.mag-plug-page.left,
-.mag-plug-page.right{ border:0 !important; }
-
-.mag-plug-page,
-.mag-plug-page.single{
   background:
     radial-gradient(900px 700px at 30% 20%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.0) 55%),
     radial-gradient(900px 700px at 75% 25%, rgba(0,0,0,0.045) 0%, rgba(0,0,0,0.0) 60%),
-    repeating-linear-gradient(135deg, rgba(0,0,0,var(--mag-paper-grain)) 0px, rgba(0,0,0,0.0) 2px, rgba(255,255,255,0.0) 6px),
+    repeating-linear-gradient(135deg,
+      rgba(0,0,0,var(--mag-paper-grain)) 0px,
+      rgba(0,0,0,0.0) 2px,
+      rgba(255,255,255,0.0) 6px
+    ),
     linear-gradient(to bottom, rgba(255,255,255,1), rgba(250,250,250,1));
-  box-shadow:var(--mag-edge-bevel);
+  box-shadow: var(--mag-edge-bevel);
 }
+.mag-plug-page.left, .mag-plug-page.right{ border:0 !important; }
 
 .mag-plug-page.left::before,
 .mag-plug-page.right::before{
   content:"";
   position:absolute;
-  top:0;
-  bottom:0;
+  top:0; bottom:0;
   width:44px;
   pointer-events:none;
   z-index:3;
   opacity:0.20;
 }
-.mag-plug-page.left::before{
-  right:0;
-  background:linear-gradient(to left, rgba(0,0,0,0.22), rgba(0,0,0,0.0));
-}
-.mag-plug-page.right::before{
-  left:0;
-  background:linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.0));
-}
+.mag-plug-page.left::before{ right:0; background:linear-gradient(to left, rgba(0,0,0,0.22), rgba(0,0,0,0.0)); }
+.mag-plug-page.right::before{ left:0; background:linear-gradient(to right, rgba(0,0,0,0.22), rgba(0,0,0,0.0)); }
 
 .mag-plug-page.left::after,
 .mag-plug-page.right::after{
   content:"";
   position:absolute;
-  top:0;
-  bottom:0;
+  top:0; bottom:0;
   width:34px;
   pointer-events:none;
   z-index:2;
   opacity:0.08;
 }
-.mag-plug-page.left::after{
-  left:0;
-  background:linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.0));
-}
-.mag-plug-page.right::after{
-  right:0;
-  background:linear-gradient(to left, rgba(0,0,0,0.18), rgba(0,0,0,0.0));
-}
+.mag-plug-page.left::after{ left:0; background:linear-gradient(to right, rgba(0,0,0,0.18), rgba(0,0,0,0.0)); }
+.mag-plug-page.right::after{ right:0; background:linear-gradient(to left, rgba(0,0,0,0.18), rgba(0,0,0,0.0)); }
 
 /* =====================================================================
    [PAGE-CURL]
@@ -402,25 +396,18 @@ body.admin-bar .mag-plug-stage{
 .mag-plug-page.right .mag-plug-sheet::after{
   content:"";
   position:absolute;
-  top:0;
-  bottom:0;
+  top:0; bottom:0;
   width:22px;
   pointer-events:none;
-  opacity:var(--mag-curl-strength);
+  opacity: var(--mag-curl-strength);
 }
 .mag-plug-page.left .mag-plug-sheet::after{
   left:0;
-  background:radial-gradient(18px 70% at 0% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
+  background: radial-gradient(18px 70% at 0% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
 }
 .mag-plug-page.right .mag-plug-sheet::after{
   right:0;
-  background:radial-gradient(18px 70% at 100% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
-}
-.mag-plug-page.single{
-  position:relative;
-  overflow:visible !important;
-  border-radius:0 !important;
-  box-shadow:none !important;
+  background: radial-gradient(18px 70% at 100% 50%, rgba(0,0,0,0.22), rgba(0,0,0,0));
 }
 
 /* =====================================================================
@@ -430,7 +417,7 @@ body.admin-bar .mag-plug-stage{
   position:relative;
   width:100%;
   height:100%;
-  overflow:visible !important;
+  overflow:hidden;
 }
 .mag-plug-el{ position:absolute; }
 .mag-plug-el img{
@@ -460,122 +447,59 @@ body.admin-bar .mag-plug-stage{
   top:12px;
   z-index:10;
   font-size:13px;
-  background:rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55);
   color:#fff;
   padding:6px 10px;
+
+  /* A11y: hide visually but keep screenreader if desired (JS can update) */
+  position:absolute !important;
+  width:1px !important;
+  height:1px !important;
+  padding:0 !important;
+  margin:-1px !important;
+  overflow:hidden !important;
+  clip: rect(0,0,0,0) !important;
+  white-space: nowrap !important;
+  border:0 !important;
 }
 .mag-plug-controls{
   position:absolute;
   left:50%;
   bottom:14px;
-  transform:translateX(-50%);
+  transform: translateX(-50%);
   z-index:10;
   display:flex;
   align-items:center;
   gap:10px;
-  background:rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55);
   padding:8px 10px;
+  border-radius:10px;
 }
 .mag-plug-btn{
   appearance:none;
   border:1px solid rgba(255,255,255,0.35);
-  background:rgba(0,0,0,0.15);
+  background: rgba(0,0,0,0.15);
   color:#fff;
-  width:36px;
-  height:32px;
-  line-height:28px;
+  width:38px;
+  height:34px;
+  line-height:30px;
   font-size:22px;
   cursor:pointer;
-  border-radius:6px;
+  border-radius:8px;
 }
-.mag-plug-btn:disabled{
-  opacity:0.4;
-  cursor:not-allowed;
-}
-.mag-plug-label{
-  color:#fff;
-  font-size:13px;
-  min-width:160px;
-  text-align:center;
-}
-
-/* =====================================================================
-   [SOUND]
-   ===================================================================== */
-.mag-plug-sound{
-  position:absolute;
-  left:12px;
-  bottom:14px;
-  z-index:10;
-}
-.mag-plug-sound-btn{
-  appearance:none;
-  border:1px solid rgba(255,255,255,0.35);
-  background:rgba(0,0,0,0.55);
-  color:#fff;
-  width:36px;
-  height:32px;
-  cursor:pointer;
-  border-radius:6px;
-}
-.mag-plug-sound-menu{
-  position:absolute;
-  left:0;
-  bottom:40px;
-  display:none;
-  min-width:160px;
-  background:rgba(0,0,0,0.75);
-  border:1px solid rgba(255,255,255,0.2);
-  overflow:hidden;
-  border-radius:10px;
-}
-.mag-plug-sound-menu.is-open{ display:block; }
-.mag-plug-sound-item{
-  width:100%;
-  text-align:left;
-  padding:10px 10px;
-  background:transparent;
-  border:0;
-  color:#fff;
-  cursor:pointer;
-}
-.mag-plug-sound-item:hover{ background:rgba(255,255,255,0.12); }
-
-/* =====================================================================
-   [RESPONSIVE]
-   ===================================================================== */
-@media (max-width:920px){
-  .mag-plug-wrapper.is-open .mag-plug-object{ padding:0; }
-  .mag-plug-spread{ flex-direction:column; }
-  .mag-plug-gutter{ display:none; }
-
-  .mag-plug-page.left::before,
-  .mag-plug-page.right::before,
-  .mag-plug-page.left::after,
-  .mag-plug-page.right::after,
-  .mag-plug-page.left .mag-plug-sheet::after,
-  .mag-plug-page.right .mag-plug-sheet::after{
-    display:none !important;
-    content:none !important;
-  }
-
-  .mag-plug-background{
-    background-position:50% 50% !important;
-    transform:none !important;
-  }
-}
+.mag-plug-btn:disabled{ opacity:0.4; cursor:not-allowed; }
+.mag-plug-label{ color:#fff; font-size:13px; min-width:160px; text-align:center; }
 
 /* =====================================================================
    [KNOB] single radio-knob control
    ===================================================================== */
-.mag-plug-controls{ gap:10px; }
 .mag-plug-knob{
   position:relative;
   width:42px;
   height:42px;
   border-radius:999px;
   border:1px solid rgba(255,255,255,0.35);
-  background:rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55);
   cursor:pointer;
   appearance:none;
   display:inline-flex;
@@ -598,7 +522,7 @@ body.admin-bar .mag-plug-stage{
   width:2px;
   height:14px;
   top:7px;
-  background:rgba(255,255,255,0.9);
+  background: rgba(255,255,255,0.9);
   border-radius:2px;
   opacity:0.9;
 }
@@ -606,14 +530,15 @@ body.admin-bar .mag-plug-stage{
   position:absolute;
   left:50%;
   bottom:54px;
-  transform:translateX(-50%);
+  transform: translateX(-50%);
   display:none;
   min-width:180px;
-  background:rgba(0,0,0,0.35);
-  backdrop-filter:blur(6px);
+  background: rgba(0,0,0,0.35);
+  backdrop-filter: blur(6px);
   border:1px solid rgba(255,255,255,0.25);
   padding:6px 0;
   z-index:12;
+  border-radius:12px;
 }
 .mag-plug-knob-menu.is-open{ display:block; }
 .mag-plug-knob-item{
@@ -626,83 +551,61 @@ body.admin-bar .mag-plug-stage{
   cursor:pointer;
   font-size:13px;
 }
-.mag-plug-knob-item:hover{ background:rgba(255,255,255,0.12); }
+.mag-plug-knob-item:hover{ background: rgba(255,255,255,0.12); }
 
 .mag-plug-pagejump{
   appearance:none;
   border:1px solid rgba(255,255,255,0.35);
-  background:rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.55);
   color:#fff;
-  height:32px;
-  min-width:54px;
+  height:34px;
+  min-width:72px;
   padding:0 10px;
   cursor:pointer;
-  border-radius:0;
+  border-radius:8px;
   font-size:13px;
 }
 .mag-plug-pageinput{
   position:absolute;
   left:50%;
   bottom:54px;
-  transform:translateX(-50%);
+  transform: translateX(-50%);
   display:none;
-  width:120px;
-  height:36px;
-  background:rgba(0,0,0,0.70);
+  width:140px;
+  height:40px;
+  background: rgba(0,0,0,0.70);
   color:#fff;
   border:1px solid rgba(255,255,255,0.35);
   padding:0 10px;
-  border-radius:0;
+  border-radius:10px;
   z-index:12;
 }
 .mag-plug-pageinput.is-open{ display:block; }
 
 /* =====================================================================
-   PATCH — hide top-left live label (keep for screen readers via JS aria-live)
+   [RESPONSIVE]
    ===================================================================== */
-.mag-plug-live{
-  position:absolute !important;
-  width:1px !important;
-  height:1px !important;
-  padding:0 !important;
-  margin:-1px !important;
-  overflow:hidden !important;
-  clip:rect(0,0,0,0) !important;
-  white-space:nowrap !important;
-  border:0 !important;
+@media (max-width:920px){
+  .mag-plug-spread{ flex-direction:column; }
+  .mag-plug-gutter{ display:none; }
+
+  .mag-plug-page.left::before,
+  .mag-plug-page.right::before,
+  .mag-plug-page.left::after,
+  .mag-plug-page.right::after,
+  .mag-plug-page.left .mag-plug-sheet::after,
+  .mag-plug-page.right .mag-plug-sheet::after{
+    display:none !important;
+    content:none !important;
+  }
+
+  /* On small screens, reduce depth a bit */
+  .mag-plug-stage{ perspective: 900px; }
 }
 
 /* =====================================================================
-   PATCH — STOP “FLYING” (lock ALL parallax/3D motion; allow knob Z rotate)
+   [NOTE]
+   Background lock is applied by the Custom Layer plugin as inline CSS
+   (BG only). Do NOT add a global "stop flying" patch here; it would
+   also kill the book tilt that you want on hover.
    ===================================================================== */
-.mag-plug,
-.mag-plug-wrapper,
-.mag-plug-stage,
-.mag-plug-object{
-  --mag-tilt-x:0deg !important;
-  --mag-tilt-y:0deg !important;
-  --mag-parallax-z:0px !important;
-  --mag-parallax-scale:1 !important;
-  --mag-bg-x:0px !important;
-  --mag-bg-y:0px !important;
-  --mag-bg-scale:1 !important;
-}
-.mag-plug-background{
-  background-position:50% 50% !important;
-  transform:none !important;
-  will-change:auto !important;
-}
-.mag-plug-stage{
-  perspective:none !important;
-  perspective-origin:50% 50% !important;
-}
-.mag-plug-object{
-  transform: rotateZ(var(--mag-tilt-z)) !important;
-  transition: transform 120ms ease !important;
-  will-change: transform !important;
-  transform-style: flat !important;
-}
-@media (prefers-reduced-motion: no-preference){
-  .mag-plug-object,
-  .mag-plug-background{ animation:none !important; }
-}

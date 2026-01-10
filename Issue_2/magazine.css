@@ -580,3 +580,36 @@ body.admin-bar .mag-plug-stage{
   .mag-plug-object{ transition:none !important; transform:none !important; filter: none !important; }
   .mag-plug-background{ transform:none !important; }
 }
+/* BCS Magazine — patch css (v5)
+   Purpose:
+   - Hide any legacy arrow buttons (if any remain from other scripts)
+   - Provide a moving under-book shadow
+   - Prevent “see-through gutter” by giving gutter/spine a fill + subtle shading
+*/
+.mag-plug-prev,.mag-plug-next,.bcs-mag-prev,.bcs-mag-next,.turn-prev,.turn-next{display:none!important;}
+
+.mag-plug-stage{position:relative;}
+.mag-plug-book-shadow{
+  position:absolute;
+  left:50%;
+  top:50%;
+  width:min(74vw, 860px);
+  height:min(42vw, 520px);
+  transform:translate(-50%,-50%);
+  border-radius:22px;
+  pointer-events:none;
+  filter:blur(18px);
+  opacity:0.40;
+  background: radial-gradient(closest-side, rgba(0,0,0,0.45), rgba(0,0,0,0.0));
+}
+
+/* ensure book renders above shadow */
+.mag-plug-object{position:relative; z-index:3; transform-style:preserve-3d; will-change:transform;}
+.mag-plug-spread{position:relative; background:transparent;}
+.mag-plug-gutter{
+  background: rgba(245,245,245,0.92);
+  box-shadow:
+    inset 10px 0 14px rgba(0,0,0,0.10),
+    inset -10px 0 14px rgba(0,0,0,0.10);
+}
+

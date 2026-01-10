@@ -1,14 +1,13 @@
 /* =====================================================================
-   MAG PLUG — RUNTIME (magazine.js) — REALISM/PERF PATCHSET v4 (WP)
+   MAG PLUG — RUNTIME (magazine.js) — REALISM PATCHSET v2 (WP)
    Goals (current):
-   - Cover click works (no “nothing happens”)
-   - Touch swipe + tap works (mobile/tablet)
-   - Larger edge tap zone (more realistic page-turn target)
-   - Arrow tap: single-step (guarded); Arrow hold: repeat but SLOW (no “machine gun”)
-   - Book tilts on hover/mouse move (background stays locked)
-   - Never see through gutter (handled in CSS: spread has solid background)
-   - True closed-cover states: front + back; last spread -> back cover
-   - Nav guard prevents double-turns from multiple handlers
+   - Prevent double-turns (dequeue legacy handlers + capture-stop fallback)
+   - Arrows: tap = single step (guarded); hold = repeat (slow -> accel)
+   - Touch: swipe left/right turns pages (reliable; prevents scroll-jank)
+   - Bigger edge click target (outer 24%) + middle advances
+   - Background static; book tilts on hover (subtle realism)
+   - Realistic stack illusion (smooth) + solid gutter (no see-through)
+   - Controls: Single/Spread toggle, Music toggle, TOC overlay
    ===================================================================== */
 (() => {
   const DEFAULT_BG_URL =
@@ -96,9 +95,7 @@
     } catch (_) {}
   }
 
-  function ensureRootClasses(rootEl) {
-    rootEl.classList.add("mag-plug");
-  }
+  function ensureRootClasses(rootEl) { rootEl.classList.add("mag-plug"); }
 
   function buildShell(rootEl, cfg) {
     rootEl.innerHTML = "";
@@ -135,7 +132,7 @@
     const controls = document.createElement("div");
     controls.className = "mag-plug-controls";
     controls.innerHTML = `
-      <button class="mag-plug-btn mag-plug-prev" type="button" aria-label="Previous spread">‹</button>
+      <button class="mag-plug-btn mag-plug-prev" type="button" aria-label="Previous page">‹</button>
 
       <button class="mag-plug-knob" type="button" aria-label="Rotation knob" aria-haspopup="menu" aria-expanded="false">
         <span class="mag-plug-knob-ind" aria-hidden="true"></span>
@@ -148,13 +145,27 @@
         <button type="button" class="mag-plug-knob-item" role="menuitem" data-action="rot+90">⟳ 90°</button>
       </div>
 
+      <button class="mag-plug-viewbtn" type="button" aria-label="Toggle view">Spread</button>
+      <button class="mag-plug-tocbtn" type="button" aria-label="Table of contents">TOC</button>
+
       <button class="mag-plug-pagejump" type="button" aria-label="Jump to page">Cover</button>
       <input class="mag-plug-pageinput" type="number" inputmode="numeric" min="1" step="1" aria-label="Type a page number and press Enter" />
 
+      <div class="mag-plug-sound">
+        <button class="mag-plug-sound-btn" type="button" aria-label="Toggle music">♪</button>
+      </div>
+
       <button class="mag-plug-btn mag-plug-close" type="button" aria-label="Close magazine">✕</button>
-      <button class="mag-plug-btn mag-plug-next" type="button" aria-label="Next spread">›</button>
+      <button class="mag-plug-btn mag-plug-next" type="button" aria-label="Next page">›</button>
     `;
     wrapper.appendChild(controls);
+
+    const toc = document.createElement("div");
+    toc.className = "mag-plug-toc";
+    toc.setAttribute("role", "dialog");
+    toc.setAttribute("aria-modal", "false");
+    toc.setAttribute("aria-label", "Table of contents");
+    wrapper.appendChild(toc);
 
     const live = document.createElement("div");
     live.className = "mag-plug-live";
@@ -164,6 +175,7 @@
 
     return {
       controls,
+      toc,
       live,
       btnPrev: q(".mag-plug-prev", controls),
       btnNext: q(".mag-plug-next", controls),
@@ -172,6 +184,9 @@
       knobMenu: q(".mag-plug-knob-menu", controls),
       pageJumpBtn: q(".mag-plug-pagejump", controls),
       pageInput: q(".mag-plug-pageinput", controls),
+      viewBtn: q(".mag-plug-viewbtn", controls),
+      tocBtn: q(".mag-plug-tocbtn", controls),
+      soundBtn: q(".mag-plug-sound-btn", controls),
     };
   }
 
@@ -193,13 +208,6 @@
     const bgFromManifest = manifest && manifest.background ? (manifest.background.image || manifest.background.imageUrl || "") : "";
     const bgUrl = resolveUrlMaybe(baseHref, bgFromManifest || (cfg && cfg.backgroundUrl) || DEFAULT_BG_URL);
     shell.bg.style.backgroundImage = bgUrl ? `url("${bgUrl}")` : "none";
-
-    // Background vars are typically locked by the custom layer plugin.
-    // Still, set sane defaults here.
-    rootEl.style.setProperty("--mag-bg-x", "0px");
-    rootEl.style.setProperty("--mag-bg-y", "0px");
-    rootEl.style.setProperty("--mag-bg-scale", "1");
-
     shell.propsLayer.innerHTML = "";
   }
 
@@ -224,6 +232,7 @@
         left: leftRef ? leftRef.page : null,
         right: rightRef ? rightRef.page : null,
         leftIdx: leftRef ? leftRef.idx : null,
+        rightIdx: rightRef ? rightRef.idx : null,
         pageLeftNumber: s.pageLeftNumber ?? (leftRef?.page?.pageNumber ?? null),
         pageRightNumber: s.pageRightNumber ?? (rightRef?.page?.pageNumber ?? null),
       };
@@ -236,10 +245,10 @@
 
     const st = node && node.style && typeof node.style === "object" ? node.style : {};
     const x = getNum(st.x, 0), y = getNum(st.y, 0), w = getNum(st.w, 0), h = getNum(st.h, 0);
-    el.style.left = (x * 100) + "%";
-    el.style.top = (y * 100) + "%";
-    el.style.width = (w * 100) + "%";
-    el.style.height = (h * 100) + "%";
+    el.style.left = x * 100 + "%";
+    el.style.top = y * 100 + "%";
+    el.style.width = w * 100 + "%";
+    el.style.height = h * 100 + "%";
 
     const type = (node.type || "").toLowerCase();
     if (type === "image") {
@@ -289,7 +298,6 @@
     const direct = resolveUrlMaybe(baseHref, String(vBack || ""));
     if (direct) return direct;
 
-    // fallback: last image found in last page
     try {
       const pages = (viewer && Array.isArray(viewer.pages)) ? viewer.pages : [];
       for (let i = pages.length - 1; i >= 0; i--) {
@@ -337,11 +345,15 @@
       cover.appendChild(t);
     }
 
-    // Click + keyboard open
-    cover.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); onOpen(); }, true);
     cover.addEventListener("keydown", (e) => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); e.stopPropagation(); onOpen(); }
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); }
     });
+
+    // Capture click to avoid page-level listeners double-firing
+    cover.addEventListener("click", (e) => {
+      e.preventDefault(); e.stopPropagation();
+      onOpen();
+    }, true);
 
     objectEl.appendChild(cover);
     try { cover.focus({ preventScroll: true }); } catch (_) {}
@@ -352,10 +364,11 @@
 
     const spread = document.createElement("div");
     spread.className = "mag-plug-spread";
+    spread.setAttribute("data-has-right-stack", "1");
 
-    const backPlane = document.createElement("div");
-    backPlane.className = "mag-plug-spread-back";
-    spread.appendChild(backPlane);
+    const rightStack = document.createElement("div");
+    rightStack.className = "mag-plug-right-stack";
+    spread.appendChild(rightStack);
 
     const pageL = document.createElement("div");
     pageL.className = "mag-plug-page left";
@@ -381,12 +394,24 @@
     objectEl.appendChild(spread);
   }
 
+  function renderSingle(objectEl, page, baseHref) {
+    objectEl.innerHTML = "";
+    const pageEl = document.createElement("div");
+    pageEl.className = "mag-plug-page single";
+    const sheet = document.createElement("div");
+    sheet.className = "mag-plug-sheet";
+    (Array.isArray(page?.elements) ? page.elements : []).forEach((n) => sheet.appendChild(elementToDom(n, baseHref)));
+    pageEl.appendChild(sheet);
+    objectEl.appendChild(pageEl);
+  }
+
   function updateStacks(stageEl, spreadIndex, spreadCount) {
     const root = stageEl.closest(".mag-plug") || document.documentElement;
-    const left = clamp(spreadIndex * 2, 0, spreadCount * 2);
-    const right = clamp(spreadCount * 2 - spreadIndex * 2 - 2, 0, spreadCount * 2);
-    root.style.setProperty("--mag-stack-left", String(clamp(left, 0, 80)));
-    root.style.setProperty("--mag-stack-right", String(clamp(right, 0, 80)));
+    const ratio = spreadCount <= 1 ? 0 : (spreadIndex / (spreadCount - 1));
+    const leftPx = clamp(10 + ratio * 22, 8, 34);      // grows as you move forward
+    const rightPx = clamp(32 - ratio * 22, 8, 34);     // shrinks as you move forward
+    root.style.setProperty("--mag-stack-left-px", `${leftPx.toFixed(1)}px`);
+    root.style.setProperty("--mag-stack-right-px", `${rightPx.toFixed(1)}px`);
   }
 
   function setLabel(ui, text, announce) {
@@ -398,7 +423,7 @@
     if (!ui || !state || !transform) return;
     if (!ui.btnPrev || !ui.btnNext || !ui.btnClose) return;
 
-    // HARD RESET prev/next buttons to remove any existing listeners from other scripts/plugins
+    // HARD RESET prev/next buttons to remove existing listeners
     {
       const prevClone = ui.btnPrev.cloneNode(true);
       ui.btnPrev.replaceWith(prevClone);
@@ -409,19 +434,29 @@
       ui.btnNext = nextClone;
     }
 
+    // Capture-stop on control bar to avoid page builder click handlers
+    ui.controls.addEventListener("click", (e) => {
+      const t = e.target;
+      if (!(t instanceof HTMLElement)) return;
+      if (t.closest(".mag-plug-controls")) {
+        e.stopPropagation();
+      }
+    }, true);
+
     ui.btnClose.addEventListener("click", (e) => {
-      e.preventDefault(); e.stopPropagation();
+      e.preventDefault();
+      e.stopPropagation();
       state.goCover("front");
     }, true);
 
-    // Arrow repeat: slow + gentle acceleration
-    const HOLD_DELAY   = 650; // ms before repeating starts
-    const REPEAT_START = 650; // initial repeat interval
-    const REPEAT_MIN   = 420; // fastest repeat interval
-    const ACCEL_EVERY  = 1500; // ms between speed-ups
-    const ACCEL_STEP   = 40; // ms faster each accel tick
+    // Slower + safer repeat
+    const HOLD_DELAY = 900;     // ms before repeating starts
+    const REPEAT_START = 520;   // initial repeat (ms)
+    const REPEAT_MIN = 260;     // fastest repeat (ms)
+    const ACCEL_EVERY = 1100;   // ms between speed-ups
+    const ACCEL_STEP = 30;      // ms faster each accel tick
 
-    function bindHoldToRepeat(btn, stepFn) {
+    function bindHoldToRepeat(btn, stepFn /* (force:boolean)=>void */) {
       let holdTimer = 0;
       let repeatTimer = 0;
       let accelTimer = 0;
@@ -434,6 +469,7 @@
         if (accelTimer) { clearInterval(accelTimer); accelTimer = 0; }
       };
 
+      // swallow click so no other handler runs
       btn.addEventListener("click", (e) => { e.preventDefault(); e.stopPropagation(); }, true);
 
       const startRepeat = () => {
@@ -452,7 +488,8 @@
       };
 
       btn.addEventListener("pointerdown", (e) => {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         isHeld = false;
         clearAll();
         try { btn.setPointerCapture(e.pointerId); } catch (_) {}
@@ -460,7 +497,8 @@
       }, true);
 
       btn.addEventListener("pointerup", (e) => {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         const doSingle = !isHeld;
         clearAll();
         if (doSingle) stepFn(false);
@@ -488,16 +526,17 @@
       };
 
       ui.knobBtn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         toggleKnob();
-      });
+      }, true);
 
       document.addEventListener("pointerdown", (e) => {
         if (!knobOpen) return;
         if (ui.knobMenu.contains(e.target) || ui.knobBtn.contains(e.target)) return;
         closeKnob();
-      });
-      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); });
+      }, true);
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeKnob(); }, true);
 
       ui.knobMenu.addEventListener("click", (e) => {
         const t = e.target;
@@ -512,17 +551,18 @@
         if (act === "rot+45") transform.rotateBy(45);
         if (act === "rot-90") transform.rotateBy(-90);
         if (act === "rot+90") transform.rotateBy(90);
-      });
+      }, true);
     }
 
     // page jump
     if (ui.pageJumpBtn && ui.pageInput) {
       ui.pageJumpBtn.addEventListener("click", (e) => {
-        e.preventDefault(); e.stopPropagation();
+        e.preventDefault();
+        e.stopPropagation();
         ui.pageInput.value = "";
         ui.pageInput.classList.add("is-open");
         try { ui.pageInput.focus({ preventScroll: true }); ui.pageInput.select(); } catch (_) {}
-      });
+      }, true);
 
       const closePageInput = () => ui.pageInput.classList.remove("is-open");
 
@@ -534,8 +574,54 @@
           closePageInput();
           if (Number.isFinite(v)) state.goToPage(v);
         }
-      });
-      ui.pageInput.addEventListener("blur", () => closePageInput());
+      }, true);
+      ui.pageInput.addEventListener("blur", () => closePageInput(), true);
+    }
+
+    // view toggle
+    if (ui.viewBtn) {
+      ui.viewBtn.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        state.toggleViewMode();
+      }, true);
+    }
+
+    // TOC
+    if (ui.tocBtn && ui.toc) {
+      const closeToc = () => ui.toc.classList.remove("is-open");
+      ui.tocBtn.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        ui.toc.classList.toggle("is-open");
+      }, true);
+
+      ui.toc.addEventListener("click", (e) => {
+        const t = e.target;
+        if (!(t instanceof HTMLElement)) return;
+        const btn = t.closest(".mag-plug-toc-item");
+        if (!btn) return;
+        const idx = parseInt(String(btn.getAttribute("data-spread") || "0"), 10);
+        const side = String(btn.getAttribute("data-side") || "spread");
+        closeToc();
+        state.openToSpread(clamp(idx, 0, state.spreads.length - 1));
+        if (side === "left") state.singleSide = "left";
+        if (side === "right") state.singleSide = "right";
+        state.render();
+      }, true);
+
+      document.addEventListener("keydown", (e) => { if (e.key === "Escape") closeToc(); }, true);
+      document.addEventListener("pointerdown", (e) => {
+        if (!ui.toc.classList.contains("is-open")) return;
+        if (ui.toc.contains(e.target) || ui.tocBtn.contains(e.target)) return;
+        closeToc();
+      }, true);
+    }
+
+    // sound
+    if (ui.soundBtn) {
+      ui.soundBtn.addEventListener("click", (e) => {
+        e.preventDefault(); e.stopPropagation();
+        state.toggleMusic();
+      }, true);
     }
   }
 
@@ -551,30 +637,18 @@
     });
   }
 
-  function attachBookMotion(stageEl, cfg, rootEl) {
+  function attachParallax(stageEl, cfg, rootEl) {
     if (prefersReducedMotion(cfg)) return () => {};
     const root = rootEl || stageEl.closest(".mag-plug") || document.documentElement;
 
-    // Subtle, realistic tilt amounts
-    const MAX_Y = 7.5;   // rotateY (left/right)
-    const MAX_X = 5.5;   // rotateX (up/down)
-    const MAX_Z = 10;    // depth lift in px
-    const SCALE = 1.005; // tiny scale
-
+    // subtle movement only
     let raf = 0;
     let tx = 0, ty = 0;
-    let z = 0;
-    let sc = 1;
 
     function apply() {
       raf = 0;
       root.style.setProperty("--mag-tilt-x", `${ty.toFixed(2)}deg`);
       root.style.setProperty("--mag-tilt-y", `${tx.toFixed(2)}deg`);
-      root.style.setProperty("--mag-parallax-z", `${z.toFixed(1)}px`);
-      root.style.setProperty("--mag-parallax-scale", `${sc.toFixed(3)}`);
-      // Background stays locked (inline patch in plugin does the heavy lifting)
-      root.style.setProperty("--mag-bg-x", "0px");
-      root.style.setProperty("--mag-bg-y", "0px");
     }
 
     function onMove(clientX, clientY) {
@@ -584,27 +658,20 @@
       const cx = clamp(nx, -1, 1);
       const cy = clamp(ny, -1, 1);
 
-      tx = cx * MAX_Y;
-      ty = -cy * MAX_X;
-      z = 4 + (1 - Math.min(1, Math.abs(cx) + Math.abs(cy))) * MAX_Z;
-      sc = SCALE;
+      tx = cx * 5.5;     // rotateY
+      ty = -cy * 4.0;    // rotateX
 
       if (!raf) raf = requestAnimationFrame(apply);
     }
 
-    function reset() {
-      tx = 0; ty = 0; z = 0; sc = 1;
-      if (!raf) raf = requestAnimationFrame(apply);
-    }
+    function reset() { tx = ty = 0; if (!raf) raf = requestAnimationFrame(apply); }
 
     const onPointerMove = (e) => onMove(e.clientX, e.clientY);
 
     stageEl.addEventListener("pointermove", onPointerMove, { passive: true });
     stageEl.addEventListener("pointerleave", reset, { passive: true });
 
-    // initialize
     reset();
-
     return () => {
       stageEl.removeEventListener("pointermove", onPointerMove);
       stageEl.removeEventListener("pointerleave", reset);
@@ -615,71 +682,73 @@
     const stage = shell.stage;
     const objectEl = shell.object;
 
-    // Larger edge target area (user request)
     const EDGE = 0.24;
-
-    // Swipe thresholds tuned for touch
     const SWIPE_MIN_PX = 28;
     const SWIPE_MAX_Y_PX = 110;
-    const TAP_MAX_MOV_PX = 10;
-    const TAP_MAX_MS = 420;
 
     let down = false;
-    let sx = 0, sy = 0, st = 0;
-    let pointerId = null;
+    let sx = 0, sy = 0;
+    let lx = 0, ly = 0;
+    let startT = 0;
+    let maybeHorizontal = false;
 
-    const getPoint = (e) => {
-      if (e.touches && e.touches.length) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-      return { x: e.clientX, y: e.clientY };
+    const isInteractiveTarget = (t) => {
+      if (!t || !(t instanceof HTMLElement)) return false;
+      const tag = t.tagName ? String(t.tagName).toLowerCase() : "";
+      if (tag === "button" || tag === "input" || tag === "a" || tag === "select" || tag === "textarea") return true;
+      if (t.closest(".mag-plug-controls")) return true;
+      return false;
     };
 
-    const isInteractive = (t) => {
-      if (!t || !t.tagName) return false;
-      const tag = String(t.tagName).toLowerCase();
-      return tag === "button" || tag === "input" || tag === "a" || tag === "textarea" || tag === "select";
-    };
-
-    const onDown = (e) => {
-      if (isInteractive(e.target)) return;
-
+    const onStart = (x, y) => {
       down = true;
-      const p = getPoint(e);
-      sx = p.x; sy = p.y;
-      st = Date.now();
+      sx = lx = x;
+      sy = ly = y;
+      startT = Date.now();
+      maybeHorizontal = false;
+    };
 
-      if (e.pointerId !== undefined) {
-        pointerId = e.pointerId;
-        try { stage.setPointerCapture(pointerId); } catch (_) {}
+    const onMove = (x, y, e) => {
+      if (!down) return;
+      lx = x; ly = y;
+
+      const dx = lx - sx;
+      const dy = ly - sy;
+
+      // If it becomes horizontal, prevent scroll for the remainder of gesture
+      if (!maybeHorizontal) {
+        if (Math.abs(dx) > 10 && Math.abs(dx) > Math.abs(dy)) {
+          maybeHorizontal = true;
+        }
+      }
+      if (maybeHorizontal && e && typeof e.preventDefault === "function") {
+        e.preventDefault();
       }
     };
 
-    const onUp = (e) => {
+    const onEnd = (x, y) => {
       if (!down) return;
       down = false;
 
-      const p = getPoint(e);
-      const dx = p.x - sx;
-      const dy = p.y - sy;
+      const dx = x - sx;
+      const dy = y - sy;
       const adx = Math.abs(dx);
       const ady = Math.abs(dy);
-      const elapsed = Date.now() - st;
+      const elapsed = Date.now() - startT;
 
       // Swipe
       if (adx >= SWIPE_MIN_PX && ady <= SWIPE_MAX_Y_PX) {
-        // prevent scroll on horizontal swipe end
-        try { e.preventDefault(); } catch (_) {}
         if (dx < 0) state.goNext(false);
         else state.goPrev(false);
         return;
       }
 
       // Tap
-      if (elapsed <= TAP_MAX_MS && adx <= TAP_MAX_MOV_PX && ady <= TAP_MAX_MOV_PX) {
+      if (elapsed < 380 && adx < 8 && ady < 8) {
         const r = objectEl.getBoundingClientRect();
-        const nx = (p.x - r.left) / Math.max(1, r.width);
+        const nx = (x - r.left) / Math.max(1, r.width);
 
         if (!state.isOpen) {
-          // closed: tap anywhere opens (front/back depending on current cover)
           if (state.coverSide === "back") state.openToSpread(state.spreads.length - 1);
           else state.openToSpread(0);
           return;
@@ -687,31 +756,61 @@
 
         if (nx <= EDGE) state.goPrev(false);
         else if (nx >= 1 - EDGE) state.goNext(false);
-        else state.goNext(false); // middle advances
+        else state.goNext(false);
       }
     };
 
-    // Use pointer events for modern devices + touch fallback.
-    stage.addEventListener("pointerdown", onDown, { passive: true });
-    stage.addEventListener("pointerup", onUp, { passive: false });
-    stage.addEventListener("pointercancel", () => { down = false; }, { passive: true });
+    // Pointer events
+    stage.addEventListener("pointerdown", (e) => {
+      if (isInteractiveTarget(e.target)) return;
+      onStart(e.clientX, e.clientY);
+    }, true);
 
-    stage.addEventListener("touchstart", onDown, { passive: true });
-    stage.addEventListener("touchend", onUp, { passive: false });
-    stage.addEventListener("touchcancel", () => { down = false; }, { passive: true });
+    stage.addEventListener("pointermove", (e) => {
+      onMove(e.clientX, e.clientY, null);
+    }, true);
 
-    return () => {
-      stage.removeEventListener("pointerdown", onDown);
-      stage.removeEventListener("pointerup", onUp);
-      stage.removeEventListener("pointercancel", () => {});
+    stage.addEventListener("pointerup", (e) => {
+      onEnd(e.clientX, e.clientY);
+    }, true);
 
-      stage.removeEventListener("touchstart", onDown);
-      stage.removeEventListener("touchend", onUp);
-      stage.removeEventListener("touchcancel", () => {});
-      if (pointerId !== null) {
-        try { stage.releasePointerCapture(pointerId); } catch (_) {}
-      }
-    };
+    // Touch fallback (more reliable on iOS)
+    stage.addEventListener("touchstart", (e) => {
+      if (isInteractiveTarget(e.target)) return;
+      if (!e.touches || !e.touches.length) return;
+      const t = e.touches[0];
+      onStart(t.clientX, t.clientY);
+    }, { passive: true, capture: true });
+
+    stage.addEventListener("touchmove", (e) => {
+      if (!e.touches || !e.touches.length) return;
+      const t = e.touches[0];
+      onMove(t.clientX, t.clientY, e);
+    }, { passive: false, capture: true });
+
+    stage.addEventListener("touchend", (e) => {
+      // use last known
+      onEnd(lx, ly);
+    }, { passive: true, capture: true });
+
+    return () => {};
+  }
+
+  function buildToc(ui, spreads) {
+    if (!ui || !ui.toc) return;
+    ui.toc.innerHTML = `<h3>Table of Contents</h3>`;
+    spreads.forEach((sp, i) => {
+      const pnL = sp.pageLeftNumber ? String(sp.pageLeftNumber) : String(i * 2 + 1);
+      const pnR = sp.pageRightNumber ? String(sp.pageRightNumber) : String(i * 2 + 2);
+      const label = `Pages ${pnL}–${pnR}`;
+      const item = document.createElement("button");
+      item.type = "button";
+      item.className = "mag-plug-toc-item";
+      item.setAttribute("data-spread", String(i));
+      item.setAttribute("data-side", "spread");
+      item.innerHTML = `${label}<span class="mag-plug-toc-meta">Spread ${i + 1} of ${spreads.length}</span>`;
+      ui.toc.appendChild(item);
+    });
   }
 
   function getRoots() {
@@ -732,7 +831,7 @@
     shell.wrapper.setAttribute("aria-label", "Magazine reader");
 
     const transform = makeTransformController(rootEl, cfg);
-    const detachBookMotion = attachBookMotion(shell.stage, cfg, rootEl);
+    const detachParallax = attachParallax(shell.stage, cfg, rootEl);
 
     setLabel(ui, "Loading…", false);
 
@@ -746,20 +845,20 @@
       setLabel(ui, "Failed to load issue", true);
       if (ui.btnPrev) ui.btnPrev.disabled = true;
       if (ui.btnNext) ui.btnNext.disabled = true;
-      detachBookMotion();
+      detachParallax();
       return;
     }
 
     applyManifestTheme(shell, rootEl, cfg, manifest, baseHref);
 
-    const { byId } = indexPagesById(viewer);
+    const { byId, pages } = indexPagesById(viewer);
     const spreads = normalizeSpreads(viewer, byId);
 
     if (!spreads.length) {
       setLabel(ui, "No spreads", true);
       if (ui.btnPrev) ui.btnPrev.disabled = true;
       if (ui.btnNext) ui.btnNext.disabled = true;
-      detachBookMotion();
+      detachParallax();
       return;
     }
 
@@ -767,11 +866,26 @@
     const coverFront = coverInfo.coverFront || "";
     const coverBack = getBackCoverFromViewer(viewer, baseHref, coverFront);
     const coverText = coverInfo.coverText || "";
-
     rootEl.style.setProperty("--mag-cover-front", coverFront ? `url("${coverFront}")` : "none");
 
-    // NAV GUARD: prevents double-turns from multiple handlers firing on one press
-    const NAV_GUARD_MS = 520; // slightly longer to avoid “too fast” feel
+    // MUSIC (optional)
+    const musicUrl = resolveUrlMaybe(baseHref, String((cfg && cfg.musicUrl) || (manifest && manifest.audio ? (manifest.audio.url || manifest.audio.musicUrl || "") : "") || ""));
+    let audio = null;
+    let musicOn = false;
+    if (musicUrl) {
+      audio = new Audio(musicUrl);
+      audio.loop = true;
+      audio.preload = "none";
+    }
+    const setMusicUi = () => {
+      if (!ui.soundBtn) return;
+      ui.soundBtn.textContent = musicOn ? "❚❚" : "♪";
+      ui.soundBtn.setAttribute("aria-label", musicOn ? "Pause music" : "Play music");
+    };
+    setMusicUi();
+
+    // NAV GUARD: slower, prevents accidental double-turns
+    const NAV_GUARD_MS = 650;
     let lastNavAt = 0;
 
     const state = {
@@ -779,13 +893,45 @@
       coverSide: "front",
       spreadIndex: 0,
       hasOpenedOnce: false,
+
+      viewMode: "spread",     // "spread" | "single"
+      singleSide: "left",     // "left" | "right"
+
       spreads,
+      pages,
+
+      toggleMusic: async () => {
+        if (!audio) return;
+        try {
+          if (!musicOn) {
+            musicOn = true;
+            await audio.play();
+          } else {
+            musicOn = false;
+            audio.pause();
+          }
+          setMusicUi();
+        } catch (_) {
+          // autoplay restrictions: user may need a second click
+          musicOn = false;
+          setMusicUi();
+        }
+      },
+
+      toggleViewMode: () => {
+        if (!state.isOpen) return;
+        state.viewMode = (state.viewMode === "spread") ? "single" : "spread";
+        shell.wrapper.classList.toggle("is-single", state.viewMode === "single");
+        if (ui.viewBtn) ui.viewBtn.textContent = (state.viewMode === "single") ? "Single" : "Spread";
+        state.render();
+      },
 
       goCover: (side = "front") => {
         state.isOpen = false;
         state.coverSide = (side === "back") ? "back" : "front";
         shell.wrapper.classList.remove("is-open");
         shell.wrapper.classList.remove("is-opening");
+        shell.wrapper.classList.remove("is-single");
 
         renderCover(shell.object, coverFront, coverBack, coverText, state.coverSide, () => state.openIssue());
 
@@ -805,10 +951,13 @@
         if (!state.hasOpenedOnce && !prefersReducedMotion(cfg)) {
           state.hasOpenedOnce = true;
           shell.wrapper.classList.add("is-opening");
-          window.setTimeout(() => shell.wrapper.classList.remove("is-opening"), 900);
+          window.setTimeout(() => shell.wrapper.classList.remove("is-opening"), 850);
         }
 
         state.spreadIndex = clamp(idx, 0, spreads.length - 1);
+        state.viewMode = state.viewMode || "spread";
+        shell.wrapper.classList.toggle("is-single", state.viewMode === "single");
+
         state.render();
         sendEvent(cfg, issueId, sessionId, "issue_open", null, {});
       },
@@ -820,17 +969,25 @@
         let idx = 0;
         for (let s = 0; s < spreads.length; s++) {
           const sp = spreads[s];
-          if (sp.pageLeftNumber === pn || sp.pageRightNumber === pn) { idx = s; break; }
+          if (sp.pageLeftNumber === pn) { idx = s; state.singleSide = "left"; break; }
+          if (sp.pageRightNumber === pn) { idx = s; state.singleSide = "right"; break; }
           const approxLeft = (s * 2) + 1;
           const approxRight = approxLeft + 1;
-          if (approxLeft === pn || approxRight === pn) { idx = s; break; }
+          if (approxLeft === pn) { idx = s; state.singleSide = "left"; break; }
+          if (approxRight === pn) { idx = s; state.singleSide = "right"; break; }
         }
         state.openToSpread(idx);
       },
 
       render: () => {
         const s = spreads[state.spreadIndex];
-        renderSpread(shell.object, s.left || null, s.right || null, baseHref);
+
+        if (state.viewMode === "single") {
+          const page = (state.singleSide === "right") ? (s.right || s.left) : (s.left || s.right);
+          renderSingle(shell.object, page || null, baseHref);
+        } else {
+          renderSpread(shell.object, s.left || null, s.right || null, baseHref);
+        }
 
         const pnL = s.pageLeftNumber;
         const pnR = s.pageRightNumber;
@@ -840,16 +997,23 @@
           const a = pnL ? String(pnL) : "—";
           const b = pnR ? String(pnR) : "—";
           label = `Pages ${a}–${b}`;
+          if (state.viewMode === "single") {
+            label = state.singleSide === "right" ? `Page ${b}` : `Page ${a}`;
+          }
         }
 
         setLabel(ui, label, !!cfg.announcePageChanges);
-        if (ui.btnPrev) ui.btnPrev.disabled = state.spreadIndex <= 0;
-        if (ui.btnNext) ui.btnNext.disabled = state.spreadIndex >= spreads.length - 1;
+        if (ui.btnPrev) ui.btnPrev.disabled = (!state.isOpen) || (state.spreadIndex <= 0 && state.viewMode !== "single");
+        if (ui.btnNext) ui.btnNext.disabled = (!state.isOpen) ? false : false;
 
         updateStacks(shell.stage, state.spreadIndex, spreads.length);
 
-        const pageIndex = (s.leftIdx !== null && s.leftIdx !== undefined) ? s.leftIdx : null;
-        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, { spread: true, spread_id: s.id });
+        const pageIndex =
+          (state.viewMode === "single")
+            ? (state.singleSide === "right" ? s.rightIdx : s.leftIdx)
+            : (s.leftIdx !== null && s.leftIdx !== undefined ? s.leftIdx : null);
+
+        sendEvent(cfg, issueId, sessionId, "page_view", pageIndex, { mode: state.viewMode, spread_id: s.id });
       },
 
       goPrev: (force = false) => {
@@ -858,9 +1022,19 @@
         lastNavAt = now;
 
         if (!state.isOpen) {
-          if (state.coverSide === "back") state.openToSpread(spreads.length - 1);
+          if (state.coverSide === "back") { state.openToSpread(spreads.length - 1); }
           return;
         }
+
+        if (state.viewMode === "single") {
+          if (state.singleSide === "right") { state.singleSide = "left"; state.render(); return; }
+          if (state.spreadIndex <= 0) { state.goCover("front"); return; }
+          state.spreadIndex = clamp(state.spreadIndex - 1, 0, spreads.length - 1);
+          state.singleSide = "right"; // step back to previous right page
+          state.render();
+          return;
+        }
+
         if (state.spreadIndex <= 0) { state.goCover("front"); return; }
         state.spreadIndex = clamp(state.spreadIndex - 1, 0, spreads.length - 1);
         state.render();
@@ -872,9 +1046,19 @@
         lastNavAt = now;
 
         if (!state.isOpen) {
-          if (state.coverSide === "front") state.openToSpread(0);
+          if (state.coverSide === "front") { state.openToSpread(0); }
           return;
         }
+
+        if (state.viewMode === "single") {
+          if (state.singleSide === "left") { state.singleSide = "right"; state.render(); return; }
+          if (state.spreadIndex >= spreads.length - 1) { state.goCover("back"); return; }
+          state.spreadIndex = clamp(state.spreadIndex + 1, 0, spreads.length - 1);
+          state.singleSide = "left";
+          state.render();
+          return;
+        }
+
         if (state.spreadIndex >= spreads.length - 1) { state.goCover("back"); return; }
         state.spreadIndex = clamp(state.spreadIndex + 1, 0, spreads.length - 1);
         state.render();
@@ -884,14 +1068,15 @@
     attachNav(ui, state, transform);
     attachKeyboard(shell.wrapper, cfg, state);
     attachGestures(shell, cfg, state);
+    buildToc(ui, spreads);
+
+    if (ui.viewBtn) ui.viewBtn.textContent = "Spread";
 
     // Start on front cover (true closed-cover state)
     state.goCover("front");
   }
 
-  function bootAll() {
-    getRoots().forEach((el) => { bootOne(el); });
-  }
+  function bootAll() { getRoots().forEach((el) => { bootOne(el); }); }
 
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", bootAll);
   else bootAll();

@@ -1,0 +1,1063 @@
+{
+  "schemaVersion": 1,
+  "issueId": "Issue_1",
+  "title": "Issue 1 (40-page demo)",
+  "pageSize": {
+    "w": 1400,
+    "h": 1800
+  },
+  "toc": [
+    {
+      "label": "Cover Story",
+      "page": 1
+    },
+    {
+      "label": "Feature",
+      "page": 5
+    },
+    {
+      "label": "Spotlight",
+      "page": 10
+    },
+    {
+      "label": "In Depth",
+      "page": 20
+    },
+    {
+      "label": "Gallery",
+      "page": 30
+    },
+    {
+      "label": "Back Page",
+      "page": 40
+    }
+  ],
+  "pages": [
+    {
+      "id": "blank_front",
+      "pageNumber": null,
+      "template": "blank",
+      "elements": []
+    },
+    {
+      "id": "page_01",
+      "pageNumber": 1,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p1",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0f172a/ffffff?text=Issue+1%20-%20Page%201",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p1",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 1",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_02",
+      "pageNumber": 2,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p2",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/111827/f9fafb?text=Issue+1%20-%20Page%202",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p2",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 2",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_03",
+      "pageNumber": 3,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p3",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/1f2937/fef3c7?text=Issue+1%20-%20Page%203",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_04",
+      "pageNumber": 4,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p4",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0b3d2e/ecfccb?text=Issue+1%20-%20Page%204",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_05",
+      "pageNumber": 5,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p5",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/2e1065/f5f3ff?text=Issue+1%20-%20Page%205",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p5",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 5",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_06",
+      "pageNumber": 6,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p6",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3b0a0a/fee2e2?text=Issue+1%20-%20Page%206",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_07",
+      "pageNumber": 7,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p7",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0a2a43/e0f2fe?text=Issue+1%20-%20Page%207",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_08",
+      "pageNumber": 8,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p8",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3a2e0a/fef9c3?text=Issue+1%20-%20Page%208",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_09",
+      "pageNumber": 9,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p9",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0f172a/ffffff?text=Issue+1%20-%20Page%209",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_10",
+      "pageNumber": 10,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p10",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/111827/f9fafb?text=Issue+1%20-%20Page%2010",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p10",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 10",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_11",
+      "pageNumber": 11,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p11",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/1f2937/fef3c7?text=Issue+1%20-%20Page%2011",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_12",
+      "pageNumber": 12,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p12",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0b3d2e/ecfccb?text=Issue+1%20-%20Page%2012",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_13",
+      "pageNumber": 13,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p13",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/2e1065/f5f3ff?text=Issue+1%20-%20Page%2013",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_14",
+      "pageNumber": 14,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p14",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3b0a0a/fee2e2?text=Issue+1%20-%20Page%2014",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_15",
+      "pageNumber": 15,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p15",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0a2a43/e0f2fe?text=Issue+1%20-%20Page%2015",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_16",
+      "pageNumber": 16,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p16",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3a2e0a/fef9c3?text=Issue+1%20-%20Page%2016",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_17",
+      "pageNumber": 17,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p17",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0f172a/ffffff?text=Issue+1%20-%20Page%2017",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_18",
+      "pageNumber": 18,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p18",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/111827/f9fafb?text=Issue+1%20-%20Page%2018",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_19",
+      "pageNumber": 19,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p19",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/1f2937/fef3c7?text=Issue+1%20-%20Page%2019",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_20",
+      "pageNumber": 20,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p20",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0b3d2e/ecfccb?text=Issue+1%20-%20Page%2020",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p20",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 20",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_21",
+      "pageNumber": 21,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p21",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/2e1065/f5f3ff?text=Issue+1%20-%20Page%2021",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_22",
+      "pageNumber": 22,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p22",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3b0a0a/fee2e2?text=Issue+1%20-%20Page%2022",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_23",
+      "pageNumber": 23,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p23",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0a2a43/e0f2fe?text=Issue+1%20-%20Page%2023",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_24",
+      "pageNumber": 24,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p24",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3a2e0a/fef9c3?text=Issue+1%20-%20Page%2024",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_25",
+      "pageNumber": 25,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p25",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0f172a/ffffff?text=Issue+1%20-%20Page%2025",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_26",
+      "pageNumber": 26,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p26",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/111827/f9fafb?text=Issue+1%20-%20Page%2026",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_27",
+      "pageNumber": 27,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p27",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/1f2937/fef3c7?text=Issue+1%20-%20Page%2027",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_28",
+      "pageNumber": 28,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p28",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0b3d2e/ecfccb?text=Issue+1%20-%20Page%2028",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_29",
+      "pageNumber": 29,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p29",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/2e1065/f5f3ff?text=Issue+1%20-%20Page%2029",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_30",
+      "pageNumber": 30,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p30",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3b0a0a/fee2e2?text=Issue+1%20-%20Page%2030",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p30",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 30",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_31",
+      "pageNumber": 31,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p31",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0a2a43/e0f2fe?text=Issue+1%20-%20Page%2031",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_32",
+      "pageNumber": 32,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p32",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3a2e0a/fef9c3?text=Issue+1%20-%20Page%2032",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_33",
+      "pageNumber": 33,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p33",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0f172a/ffffff?text=Issue+1%20-%20Page%2033",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_34",
+      "pageNumber": 34,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p34",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/111827/f9fafb?text=Issue+1%20-%20Page%2034",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_35",
+      "pageNumber": 35,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p35",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/1f2937/fef3c7?text=Issue+1%20-%20Page%2035",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_36",
+      "pageNumber": 36,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p36",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0b3d2e/ecfccb?text=Issue+1%20-%20Page%2036",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_37",
+      "pageNumber": 37,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p37",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/2e1065/f5f3ff?text=Issue+1%20-%20Page%2037",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_38",
+      "pageNumber": 38,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p38",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3b0a0a/fee2e2?text=Issue+1%20-%20Page%2038",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_39",
+      "pageNumber": 39,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p39",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/0a2a43/e0f2fe?text=Issue+1%20-%20Page%2039",
+            "fit": "cover"
+          }
+        }
+      ]
+    },
+    {
+      "id": "page_40",
+      "pageNumber": 40,
+      "template": "default",
+      "elements": [
+        {
+          "id": "img_p40",
+          "type": "image",
+          "x": 0,
+          "y": 0,
+          "w": 1,
+          "h": 1,
+          "rotation": 0,
+          "opacity": 1,
+          "z": 0,
+          "content": {
+            "imageUrl": "https://placehold.co/1400x1800/png/3a2e0a/fef9c3?text=Issue+1%20-%20Page%2040",
+            "fit": "cover"
+          }
+        },
+        {
+          "id": "txt_p40",
+          "type": "text",
+          "x": 0.06,
+          "y": 0.08,
+          "w": 0.88,
+          "h": 0.08,
+          "rotation": 0,
+          "opacity": 0.95,
+          "z": 10,
+          "content": {
+            "text": "Issue 1 • Page 40",
+            "align": "left",
+            "fontFamily": "Georgia, serif",
+            "fontSize": 42,
+            "color": "#ffffff",
+            "background": "rgba(0,0,0,0.35)",
+            "padding": 12
+          }
+        }
+      ]
+    }
+  ]
+}

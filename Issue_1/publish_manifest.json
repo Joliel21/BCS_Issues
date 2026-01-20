@@ -1,22 +1,18 @@
 {
-  "issueId": "Issue_1",
-  "title": "Issue 1 (Demo 40 pages)",
-  "cover": {
-    "image": "cover.png",
-    "text": "Issue 1"
+  "version": "1.0.0",
+  "runtime": {
+    "background": "./background.jpg",
+    "brandingEnabled": true,
+    "logoLight": "./logo-light.png",
+    "logoDark": "./logo-dark.png"
   },
-  "background": {
-    "image": ""
+  "publication": {
+    "title": "Breathtaking Awareness",
+    "subtitle": "Winter 2026",
+    "displayTitle": "Breathtaking Awareness • Winter 2026"
   },
-  "theme": {
-    "pack": "default"
-  },
-  "sound": {
-    "enabled": true,
-    "default": "calm"
-  },
-  "intro": {
-    "preset": "none"
-  },
-  "lockBehaviorVersion": true
+  "music": {
+    "enabled": false,
+    "tracks": []
+  }
 }

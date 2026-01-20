@@ -3,8 +3,8 @@
   "runtime": {
     "background": "https://breathtakingawareness.com/wp-content/uploads/2025/12/Wood-Digital-Scrapbook-Paper-9.png",
     "brandingEnabled": true,
-    "logoLight": "./logo-light.png",
-    "logoDark": "./logo-dark.png"
+    "logoLight": "https://breathtakingawareness.com/wp-content/uploads/2025/09/cropped-logo-watermark.png",
+    "logoDark": "https://breathtakingawareness.com/wp-content/uploads/2024/09/cropped-cropped-cropped-bta-logo-1-1.jpg"
   },
   "publication": {
     "title": "Breathtaking Awareness",

@@ -1,13 +1,20 @@
 {
   "issueTitle": "LUXE Magazine - Winter 2026",
   "coverImageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/12/magazine-cover.png",
-  "backCoverImageUrl": "./back-cover.jpg",
-  "totalPages": 0,
-  "spineText": "LUXE Winter 2026",
-  "backCoverText": "Discover the latest in luxury and style.",
-  "publisher": "LUXE Publishing",
-  "issueNumber": "Vol. 5 No. 2",
-  "publicationDate": "Winter 2026",
-  "pages": [],
+  "totalPages": 3,
+  "pages": [
+    {
+      "pageNumber": 1,
+      "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/12/page-01.png"
+    },
+    {
+      "pageNumber": 2,
+      "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/12/page-02.png"
+    },
+    {
+      "pageNumber": 3,
+      "imageUrl": "https://breathtakingawareness.com/wp-content/uploads/2025/12/page-03.png"
+    }
+  ],
   "toc": []
 }

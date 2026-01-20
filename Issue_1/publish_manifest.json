@@ -1,22 +1,8 @@
 {
-  "issueId": "Issue_1",
-  "title": "Winter 2026",
-  "cover": {
-    "image": "cover.png",
-    "text": "Winter 2026"
-  },
-  "background": {
-    "image": ""
-  },
-  "theme": {
-    "pack": "default"
-  },
-  "sound": {
-    "enabled": true,
-    "default": "calm"
-  },
-  "intro": {
-    "preset": "none"
-  },
-  "lockBehaviorVersion": true
+  "issue_id": "bta_trial_issue_1",
+  "issue_title": "Breathtaking Awareness \u2013 Trial Issue 1",
+  "viewer_json": "viewer.json",
+  "runtime": {
+    "mode": "figma-image-pages"
+  }
 }
